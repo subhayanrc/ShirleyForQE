@@ -1,0 +1,53 @@
+my-getopt.o: my-getopt.c /usr/include/string.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stddef.h \
+ /usr/include/xlocale.h /usr/include/stdio.h \
+ /global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/wordsize.h \
+ /usr/include/bits/typesizes.h /usr/include/libio.h /usr/include/_G_config.h \
+ /global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stddef.h \
+ /usr/include/wchar.h \
+ /global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h ../config.h \
+ my-getopt.h
+
+/usr/include/string.h:
+
+/usr/include/features.h:
+
+/usr/include/stdc-predef.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stddef.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/stdio.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/global/software/sl-7.x86_64/modules/langs/intel/2016.4.072/compilers_and_libraries_2016.4.258/linux/compiler/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+../config.h:
+
+my-getopt.h:

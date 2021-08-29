@@ -1,0 +1,35 @@
+# NetCDF C Configuration Summary
+==============================
+
+# General
+-------
+NetCDF Version:		4.4.1.1
+Configured On:		Tue Feb  4 12:49:07 PST 2020
+Host System:		x86_64-unknown-linux-gnu
+Build Directory: 	/global/home/users/subhayan/2qe/YAMBO/lib/netcdf/netcdf-4.4.1.1
+Install Prefix:         /global/home/users/subhayan/2qe/YAMBO/lib/external/intel/mpifort/v3
+
+# Compiling Options
+-----------------
+C Compiler:		/global/software/sl-7.x86_64/modules/intel/2016.4.072/openmpi/2.0.2-intel/bin/mpicc
+CFLAGS:			-g -O2 -D_C_US -D_FORTRAN_US 
+CPPFLAGS:		-DpgiFortran 
+LDFLAGS:		
+AM_CFLAGS:		
+AM_CPPFLAGS:		
+AM_LDFLAGS:		
+Shared Library:		no
+Static Library:		yes
+Extra libraries:	-lm 
+
+# Features
+--------
+NetCDF-2 API:		yes
+HDF4 Support:		no
+NetCDF-4 API:		no
+NC-4 Parallel Support:	no
+PNetCDF Support:	no
+DAP Support:		no
+Diskless Support:	yes
+MMap Support:		no
+JNA Support:		no

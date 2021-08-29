@@ -1,0 +1,17 @@
+SIMPLE: optical properties with optimal basis functions
+
+-------------------------------------------------------------------------------------------------------------
+
+Standard compilation: run "make gwl"
+
+ 
+Directory Structure: 
+simple                      : source files for construction of the optimal basis (simple.x executable)
+simple_ip                   : source files for IP calculation of optical properties (simple_ip.x executable)
+simple_bse                  : source files for BSE calculation of optical properties (simple_bse.x executable)
+
+util                        : gen_kgrid.py       --> python script that generates an uniform k-grid in the Brillouin zone with the possibility to include the periodic images of the Gamma point
+                              abcoeff_to_eps.f90 --> calculate dielectric function from the coefficients of the Haydock's recursive scheme
+
+examples/example04  : example for IP optical properties (bulk silver)
+examples/example05  : example for BSE optical properties (bulk silicon)

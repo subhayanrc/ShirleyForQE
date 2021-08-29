@@ -1,0 +1,11 @@
+prefix=/global/home/users/subhayan/2qe/YAMBO/lib/external/intel/mpifort
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libxc
+Description: Library of exchange and correlation functionals to be used in DFT codes
+Requires: 
+Version: 2.2.3
+Libs: -L${libdir} -lxc
+Cflags: -I${includedir}
