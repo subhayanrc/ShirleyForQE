@@ -1,0 +1,302 @@
+#!/bin/bash
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use the SHIRLEY codes to generate"
+$ECHO "molecular x-ray absorption spectra - example: pyrrole C5H5N."
+
+# set the needed environment variables 
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x shirley_basis.x shirley_ham.x shirley_xas.x xas_para.x"
+PSEUDO_LIST="C.pbe-van_ak.UPF N1s1.pbe-van_dgp.UPF N_xch.PBE_Ham.localproj.UPF
+H.pbe-van_ak.UPF N1s1.pbe-van_dgp.corevalence.pos carbon-pbe.UPF N.PBE_Ham.UPF 
+N_xch.PBE_Ham.UPF hydrogen-pbe.UPF N.pbe-van_ak.UPF N_xch.PBE_Ham.corerepair.pos"
+
+# hack to fix pseudo directory
+PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+outdir=$TMP_DIR
+pseudo_dir=$PSEUDO_DIR
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR"; do
+    if test ! -d $DIR ; then 
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# set up of input blocks
+TITLE='pyrrole N XAS'
+NAME="pyrrole"
+CHAPPROX=XCH
+XSYMBOL=N
+XATOM=2
+XTYPE=3
+POSN=$(( XATOM + 1 ))  # add one
+
+nat=10
+ntyp=3
+nelec=27.0
+
+CATOM=`seq -w $XATOM $nat | head -1`
+NAME=${NAME}.${XSYMBOL}${CATOM}-${CHAPPROX}
+echo $NAME
+
+
+SYSTEM="&system
+    ibrav=  1, a=10.0
+    nat=  $nat, ntyp= $ntyp, nelec=$nelec
+    nbnd= 54, occupations = 'smearing', degauss = 7.e-4
+    ecutwfc =70.0"
+
+ATOMIC_SPECIES="ATOMIC_SPECIES
+ C   12.0  carbon-pbe.UPF
+ H    1.0  hydrogen-pbe.UPF
+ ${XSYMBOL}X  14.0  ${XSYMBOL}_xch.PBE_Ham.UPF"
+
+ATOMIC_POSITIONS="ATOMIC_POSITIONS angstrom
+C       -2.814606882  -0.153700742  -0.429574612
+N       -1.913155547   0.892660945  -0.407423218
+C       -2.085049166  -1.330041668  -0.451425414
+C       -0.702768343  -0.979726023  -0.441274272
+C       -0.621855522   0.402002160  -0.413508202
+H       -3.884885266   0.023463164  -0.428240958
+H       -2.504807126  -2.331104026  -0.472373396
+H        0.143389156  -1.659905355  -0.453017917
+H        0.234629777   1.067670894  -0.398221359
+H       -2.162691080   1.877080651  -0.387440653"
+
+UPDATEPP="UPDATEPP
+ $ntyp    ! nspecies
+ -1  'carbon-pbe.UPF'
+ -1  'hydrogen-pbe.UPF'
+  1  '${XSYMBOL}_xch.PBE_Ham.localproj.UPF'"
+
+# make the excitation
+SEDSTR="${POSN}s/${XSYMBOL} /${XSYMBOL}X /"
+cat > $NAME.ATOMIC_POSITIONS <<EOFTMP
+$ATOMIC_POSITIONS
+EOFTMP
+
+ATOMIC_POSITIONS=`sed "$SEDSTR" $NAME.ATOMIC_POSITIONS`
+
+cat > $NAME.ATOMIC_POSITIONS <<EOFTMP
+$ATOMIC_POSITIONS
+EOFTMP
+
+
+# functions
+# ----------------------------------------------------------------------
+function scf {
+# ----------------------------------------------------------------------
+PREFIX=$NAME.scf
+INPUT=$PREFIX.in
+OUTPUT=$PREFIX.out
+
+cat > $INPUT <<EOFSCF
+&control
+    calculation = 'scf'
+    prefix='$NAME'
+    tstress = .true.
+    tprnfor = .true.
+    pseudo_dir = '$pseudo_dir'
+    outdir='$outdir'
+    wf_collect = .true.
+ / 
+$SYSTEM
+/
+ &electrons
+    diagonalization='david'
+    conv_thr =  1.0d-10
+ / 
+$ATOMIC_SPECIES
+$ATOMIC_POSITIONS
+  K_POINTS    automatic
+ 1 1 1 0 0 0
+EOFSCF
+$PW < $INPUT > $OUTPUT || exit
+
+#save
+cp $outdir/$NAME.save $outdir/$PREFIX.save || exit
+cp $outdir/$NAME.rho $outdir/$PREFIX.rho || exit
+}
+
+
+# NSCF calculation
+# ----------------------------------------------------------------------
+function nscf {
+# ----------------------------------------------------------------------
+PREFIX=$NAME.nscf
+INPUT=$PREFIX.in
+OUTPUT=$PREFIX.out
+
+NBND_SCF=`grep nbnd $NAME.scf.out | awk '{print $6}'`
+NBND_NSCF=$(( NBND_SCF * 3 ))
+
+cat > $INPUT <<EOFNSCF
+&control
+    calculation = 'nscf'
+    prefix='$NAME'
+    tstress = .true.
+    tprnfor = .true.
+    pseudo_dir = '$pseudo_dir'
+    outdir='$outdir'
+    wf_collect = .true.
+ / 
+$SYSTEM
+    nbnd=$NBND_NSCF
+/
+ &electrons
+    diagonalization='cg'
+    conv_thr =  1.0d-10
+ / 
+$ATOMIC_SPECIES
+$ATOMIC_POSITIONS
+  K_POINTS    automatic
+ 1 1 1 0 0 0
+EOFNSCF
+
+$PW < $INPUT > $OUTPUT || exit
+
+}
+
+
+# SHIRLEY BASIS
+# ----------------------------------------------------------------------
+function basis {
+# ----------------------------------------------------------------------
+PREFIX=$NAME.basis
+INPUT=$PREFIX.in
+OUTPUT=$PREFIX.out
+
+cat > $INPUT <<EOFBASIS
+&input
+  prefix='$NAME'
+  outdir='$outdir'
+  trace_tol=1.d-10
+/
+EOFBASIS
+
+$BASIS < $INPUT > $OUTPUT || exit
+
+}
+
+
+# SHIRLEY HAMILTONIAN
+# ----------------------------------------------------------------------
+function ham {
+# ----------------------------------------------------------------------
+PREFIX=$NAME.ham
+INPUT=$PREFIX.in
+OUTPUT=$PREFIX.out
+
+cat > $INPUT <<EOFHAM
+&input
+  prefix='${NAME}_opt'
+  outdir='$outdir'
+  updatepp = .true.
+  pseudo_dir = '$pseudo_dir'
+/
+K_POINTS
+  2 2 2 0 0 0
+$UPDATEPP
+EOFHAM
+
+$HAM < $INPUT > $OUTPUT || exit
+
+}
+
+
+# SHIRLEY XAS
+# ----------------------------------------------------------------------
+function xas {
+# ----------------------------------------------------------------------
+nk=$1
+PREFIX=$NAME.xas
+INPUT=$PREFIX.in
+OUTPUT=$PREFIX.out
+
+cat > $INPUT <<EOFXAS
+&input
+  prefix='${NAME}_opt'
+  outdir='$outdir'
+  outfile='$NAME.xas.dump'
+  readcorerep=.true.
+/
+K_POINTS
+  automatic
+  $nk $nk $nk 0 0 0
+COREREP
+  $ntyp $nat
+  1
+  $XTYPE  $XATOM  '$pseudo_dir/${XSYMBOL}_xch.PBE_Ham.corerepair.pos'
+EOFXAS
+
+$XAS < $INPUT > $OUTPUT || exit
+$XASPARA -30 40 1000 0.2 0.0 $NAME.xas.dump
+mv $NAME.xas.dump.xas $NAME.xas.$nk.xas
+
+}
+
+
+# how to run executables
+PW="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+BASIS="$PARA_PREFIX $BIN_DIR/shirley_basis.x $PARA_POSTFIX"
+HAM="$PARA_PREFIX $BIN_DIR/shirley_ham.x $PARA_POSTFIX"
+XAS="$PARA_PREFIX $BIN_DIR/shirley_xas.x $NPROCPERPOOL $PARA_POSTFIX"
+XASPARA="$PARA_PREFIX $BIN_DIR/xas_para.x $PARA_POSTFIX"
+
+# run
+scf
+nscf
+basis
+ham
+xas 8
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

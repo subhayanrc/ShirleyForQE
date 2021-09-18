@@ -1,0 +1,342 @@
+#!/bin/bash
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use the SHIRLEY codes to interpolate"
+$ECHO "the eigenvalues of hexagonal ice Ih throughout the Brillouin Zone."
+
+# set the needed environment variables 
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x shirley_basis.x shirley_ham.x shirley_qdiagp.x"
+SCRIPT_LIST="pwbands.pl diff_eigvals.pl"
+PSEUDO_LIST="oxygen-pbe.UPF hydrogen-pbe.UPF"
+
+# hack to fix pseudo directory
+PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+SCRIPT_DIR="$BIN_DIR/../scripts"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  scripts directory:     $SCRIPT_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" "$SCRIPT_DIR"; do
+    if test ! -d $DIR ; then 
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for scripts
+for FILE in $SCRIPT_LIST ; do
+    if test ! -x $SCRIPT_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $SCRIPT_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# set up of input blocks
+TITLE='hexagonal ice Ih'
+PREFIX="ice"
+
+SYSTEM="&system
+    ibrav=  4, celldm(1)=14.3511178573, celldm(3)=0.9448909365
+    nat=  36, ntyp= 2
+    ecutwfc =85.0"
+
+ATOMIC_SPECIES="ATOMIC_SPECIES
+ O  16.0  oxygen-pbe.UPF
+ H   1.0  hydrogen-pbe.UPF"
+
+ATOMIC_POSITIONS="ATOMIC_POSITIONS crystal
+O        0.333333000   0.000000000   0.062500000         0 0 0
+O        0.666667000   0.000000000   0.562500000         0 0 0
+O        0.666667000   0.666667000   0.062500000         0 0 0
+O        0.333333000   0.333333000   0.562500000         0 0 0
+O        0.000000000   0.333333000   0.062500000         0 0 0
+O        0.000000000   0.666667000   0.562500000         0 0 0
+O        0.666667000   0.000000000   0.937500000         0 0 0
+O        0.333333000   0.000000000   0.437500000         0 0 0
+O        0.333333000   0.333333000   0.937500000         0 0 0
+O        0.666667000   0.666667000   0.437500000         0 0 0
+O        0.000000000   0.666667000   0.937500000         0 0 0
+O        0.000000000   0.333333000   0.437500000         0 0 0
+H        0.335361396   0.000000000   0.202881967         1 1 1
+H        0.664638604   0.000000000   0.702881967         1 1 1
+H        0.664638604   0.664638604   0.202881967         1 1 1
+H        0.335361396   0.335361396   0.702881967         1 1 1
+H        0.000000000   0.335361396   0.202881967         1 1 1
+H        0.000000000   0.664638604   0.702881967         1 1 1
+H        0.459907505   0.000000000   0.019910197         1 1 1
+H        0.540092495   0.000000000   0.519910197         1 1 1
+H        0.540092495   0.540092495   0.019910197         1 1 1
+H        0.459907505   0.459907505   0.519910197         1 1 1
+H        0.000000000   0.459907505   0.019910197         1 1 1
+H        0.000000000   0.540092495   0.519910197         1 1 1
+H        0.792318088   0.123312368   0.986133697         1 1 1
+H        0.669005720  -0.123312368   0.986133697         1 1 1
+H        0.330994280   0.123312368   0.486133697         1 1 1
+H        0.207681912  -0.123312368   0.486133697         1 1 1
+H        0.330994280   0.207681912   0.986133697         1 1 1
+H        0.207681912   0.330994280   0.986133697         1 1 1
+H        0.669005720   0.792318088   0.486133697         1 1 1
+H        0.792318088   0.669005720   0.486133697         1 1 1
+H        0.123312368   0.792318088   0.986133697         1 1 1
+H       -0.123312368   0.669005720   0.986133697         1 1 1
+H        0.123312368   0.330994280   0.486133697         1 1 1
+H       -0.123312368   0.207681912   0.486133697         1 1 1"
+
+# functions
+# SCF calculation
+function scf_calc {
+  if [ $# -ne 4 ]
+  then
+    echo "usage: scf_calc PREFIX TMP_DIR KPTS EXE"
+    exit
+  fi
+  declare PREFIX=$1 TMP_DIR=$2 KPTS=$3 EXE=$4
+
+  cat > ${PREFIX}.scf.in << EOF
+ &control
+  calculation = 'scf'
+  title = '$TITLE'
+  restart_mode = 'from_scratch'
+  wf_collect = .true.
+  tstress = .true.
+  tprnfor = .true.
+  outdir = '${TMP_DIR}'
+  prefix = '${PREFIX}.scf'
+  pseudo_dir = '$PSEUDO_DIR'
+ /
+ $SYSTEM
+ /
+ &electrons
+  conv_thr = 1.d-12
+  diagonalization = 'david'
+ /
+ $ATOMIC_SPECIES
+ $ATOMIC_POSITIONS
+ $KPTS
+EOF
+
+  $EXE < ${PREFIX}.scf.in > ${PREFIX}.scf.out || exit
+}
+
+# NSCF calculation
+function nscf_calc {
+  if [ $# -ne 5 ]
+  then
+    echo "usage: nscf_calc PREFIX TMP_DIR KPTS EXE NBND"
+    exit
+  fi
+  declare PREFIX=$1 TMP_DIR=$2 KPTS=$3 EXE=$4 NBND=$5
+
+  cat > ${PREFIX}.nscf.in << EOF
+ &control
+  calculation = 'nscf'
+  title = '$TITLE'
+  wf_collect = .true.
+  tstress = .true.
+  tprnfor = .true.
+  outdir = '${TMP_DIR}'
+  prefix = '${PREFIX}.nscf'
+  pseudo_dir = '$PSEUDO_DIR'
+ /
+ $SYSTEM
+  nosym = .true.
+  nbnd = $NBND
+ /
+ &electrons
+  conv_thr = 1.d-12
+  diagonalization = 'cg'
+ /
+ $ATOMIC_SPECIES
+ $ATOMIC_POSITIONS
+ $KPTS
+EOF
+
+  $EXE < ${PREFIX}.nscf.in > ${PREFIX}.nscf.out || exit
+}
+
+# SHIRLEY BASIS
+function shirley_basis {
+  if [ $# -ne 3 ]
+  then
+    echo "usage: shirley_basis PREFIX TMP_DIR EXE"
+    exit
+  fi
+  declare PREFIX=$1 TMP_DIR=$2 EXE=$3
+
+  cat > ${PREFIX}.basis.in << EOF
+ &input
+  prefix = '${PREFIX}'
+  outdir = '$TMP_DIR'
+ /
+EOF
+
+  $EXE < ${PREFIX}.basis.in > ${PREFIX}.basis.out
+}
+
+# SHIRLEY HAMILTONIAN
+function shirley_ham {
+  if [ $# -ne 4 ]
+  then
+    echo "usage: shirley_ham PREFIX TMP_DIR KPTS EXE"
+    exit
+  fi
+  declare PREFIX=$1 TMP_DIR=$2 KPTS=$3 EXE=$4
+
+  cat > ${PREFIX}.ham.in << EOF
+ &input
+  prefix = '${PREFIX}_opt'
+  outdir = '$TMP_DIR'
+  updatepp = .false.
+  ncpp = .true.
+ /
+ K_POINTS
+ $KPTS
+EOF
+
+  $EXE < ${PREFIX}.ham.in > ${PREFIX}.ham.out
+}
+
+# SHIRLEY DIAGONALIZATION
+function shirley_qdiag {
+  if [ $# -ne 4 ]
+  then
+    echo "usage: shirley_qdiag PREFIX TMP_DIR KPTS EXE"
+    exit
+  fi
+  declare PREFIX=$1 TMP_DIR=$2 KPTS=$3 EXE=$4
+
+  cat > ${PREFIX}.qdiag.in << EOF
+ &input
+  hamqfile = '$TMP_DIR/${PREFIX}_opt.hamq'
+  vnlfile = '$TMP_DIR/${PREFIX}_opt.vnla'
+  outfile = '$PREFIX.qdiag.dump'
+ /
+ $KPTS
+EOF
+
+  $EXE < ${PREFIX}.qdiag.in > ${PREFIX}.qdiag.out
+}
+
+
+# how to run executables
+PW="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+SHIRLEYBASIS="$PARA_PREFIX $BIN_DIR/shirley_basis.x $PARA_POSTFIX"
+SHIRLEYHAM="$PARA_PREFIX $BIN_DIR/shirley_ham.x $PARA_POSTFIX"
+SHIRLEYQDIAG="$PARA_PREFIX $BIN_DIR/shirley_qdiagp.x $PARA_POSTFIX"
+
+echo "==== SCF ===="
+KPTS=" K_POINTS automatic
+  1 1 1 0 0 0"
+scf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW"
+if [ -e CRASH ] ; then exit ; fi
+
+echo "==== NSCF ===="
+NBND_NSCF=96
+KPTS=" K_POINTS automatic
+  1 1 1 0 0 0"
+cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.nscf.rho
+nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
+if [ -e CRASH ] ; then exit ; fi
+
+echo "==== SHIRLEY_BASIS ===="
+cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.rho
+cp $TMP_DIR/$PREFIX.nscf.save $TMP_DIR/$PREFIX.save
+shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
+
+echo "==== SHIRLEY_HAM ===="
+KPT_HAM=" 2 2 2 0 0 0"
+shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
+
+echo "==== SHIRLEY_QDIAG ===="
+KPT_QDIAG=" K_POINTS
+  crystal
+  11
+  0.0 0.0 0.0 1.0
+  0.0 0.0 0.1 1.0
+  0.0 0.0 0.2 1.0
+  0.0 0.0 0.3 1.0
+  0.0 0.0 0.4 1.0
+  0.0 0.0 0.5 1.0
+  0.0 0.0 0.6 1.0
+  0.0 0.0 0.7 1.0
+  0.0 0.0 0.8 1.0
+  0.0 0.0 0.9 1.0
+  0.0 0.0 1.0 1.0"
+shirley_qdiag "$PREFIX" "$TMP_DIR" "$KPT_QDIAG" "$SHIRLEYQDIAG"
+
+echo "==== NSCF check ===="
+KPTS=" K_POINTS crystal
+  11
+  0.0 0.0 0.0 1.0
+  0.0 0.0 0.1 1.0
+  0.0 0.0 0.2 1.0
+  0.0 0.0 0.3 1.0
+  0.0 0.0 0.4 1.0
+  0.0 0.0 0.5 1.0
+  0.0 0.0 0.6 1.0
+  0.0 0.0 0.7 1.0
+  0.0 0.0 0.8 1.0
+  0.0 0.0 0.9 1.0
+  0.0 0.0 1.0 1.0"
+cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.nscf.rho
+nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
+if [ -e CRASH ] ; then exit ; fi
+
+echo "==== checking eigenvalue differences ===="
+$SCRIPT_DIR/pwbands.pl < $PREFIX.nscf.out > $PREFIX.nscf.eig
+if test -e $PREFIX.qdiag.eig ; then rm -f $PREFIX.qdiag.eig ; fi
+for file in $PREFIX.qdiag.dump.* ; do
+  cat $file >> $PREFIX.qdiag.eig
+done
+$SCRIPT_DIR/diff_eigvals.pl $PREFIX.nscf.eig 5 $PREFIX.qdiag.eig 4 
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

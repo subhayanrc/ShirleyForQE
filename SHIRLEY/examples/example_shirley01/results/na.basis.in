@@ -1,0 +1,6 @@
+ &input
+  prefix = 'na'
+  outdir = '/Users/dgprendergast/tmp'
+  trace_tol=1.d-8
+  debug = .true.
+ /
