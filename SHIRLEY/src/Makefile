@@ -50,41 +50,62 @@ SHIRLEY_HAM = \
 shirley_ham.o \
 shirley_ham_input.o \
 start_shirley.o \
-stop_shirley.o 
-
-#append_missing_slash.o \
-#atomic_wfc_shirley.o \
-#B0.o \
+stop_shirley.o \
+append_missing_slash.o \
+hamq.o \
+print_clock_shirley.o \
+mp_scatt.o \
+hamq_shirley.o \
+hamq_pool.o \
+splines.o \
 bspline90_22.o \
+mpio.o \
+freeunit.o \
+init_us_2_shirley.o \
+scalapack_module.o \
+orthoatwfc_shirley.o \
+atomic_wfc_shirley.o \
+update_pseudo.o \
+reallocate_nlpot.o 
+
+SHIRLEY_QDIAGP = shirley_qdiagp.o $(NEWDIAGOBJ)
+
+NEWDIAGOBJ= \
+bspline90_22.o \
+corerepair.o \
+diag.o \
+freeunit.o \
+hamq_pool.o \
+hamq_shirley.o \
+kpt.o \
+mpio.o \
+mp_scatt.o \
+plot.o \
+scalapack_module.o \
+shirley_constants.o \
+shirley_input.o \
+start_shirley.o
+
+BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
+
+#B0.o \
 #elph_shirley.o \
-#freeunit.o \
 #get_dnl.o \
 #get_proj_ham.o \
 #gk_l2gmap.o \
-#hamq.o \
-#hamq_pool.o \
-#hamq_shirley.o \
-#init_us_2_shirley.o \
 #interaction.o \
 #interaction_test.o \
 #kpt.o \
-#mpio.o \
-#orthoatwfc_shirley.o \
 #qinteraction.o \
 #plot.o \
 #plot_basis.o \
 #pole_strength.o \
 #proj_shirley.o \
-#print_clock_shirley.o \
 #pwmat.o \
 #read_file_shirley.o \
-#reallocate_nlpot.o \
 #rgrid.o \
-#scalapack_module.o \
-#splines.o \
 #triples.o \
 #trnvect_wrapper.o \
-#update_pseudo.o 
 #
 #SHIRLEY_OVERLAP = \
 #append_missing_slash.o \
@@ -100,23 +121,6 @@ bspline90_22.o \
 #hamq_shirley.o \
 #start_shirley.o
 #
-#NEWDIAGOBJ= \
-#bspline90_22.o \
-#corerepair.o \
-#diag.o \
-#freeunit.o \
-#hamq_pool.o \
-#hamq_shirley.o \
-#kpt.o \
-#mpio.o \
-#plot.o \
-#pwmat_module.o \
-#scalapack_module.o \
-#shirley_constants.o \
-#shirley_input.o \
-#start_shirley.o
-#
-#SHIRLEY_QDIAGP = shirley_qdiagp.o $(NEWDIAGOBJ)
 #SHIRLEY_PLOT = shirley_plot.o $(NEWDIAGOBJ)
 #SHIRLEY_EFERMI = shirley_efermi.o  fermi.o ../PW/efermit.o ../PW/sumkt.o $(NEWDIAGOBJ)
 #SHIRLEY_EPSILON = shirley_epsilon.o scalapack_module.o fermi.o $(NEWDIAGOBJ)
@@ -149,7 +153,6 @@ bspline90_22.o \
 #JDOS_PARA = jdos_para.o start_shirley.o freeunit.o
 #XAS_PARA = xas_para.o start_shirley.o freeunit.o mpio.o
 #XARS_PARA = xars_para.o start_shirley.o freeunit.o mpio.o
-#BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
 #COND_PARA = cond_para.o fermi.o start_shirley.o freeunit.o mpio.o \
 #            ../PW/efermit.o ../PW/sumkt.o ../flib/dost.o ../flib/sort.o
 #EFERMI = efermi.o fermi.o \
@@ -449,9 +452,10 @@ bspline90_22.o \
 
 SHIRLEY_BASIS_EXE=shirley_basis$(DEBUG).x
 SHIRLEY_HAM_EXE=shirley_ham$(DEBUG).x
+SHIRLEY_QDIAGP_EXE=shirley_qdiagp$(DEBUG).x
+BANDSTRUCT_EXE=bandstruct$(DEBUG).x
 #SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 ##SHIRLEY_QDIAG_EXE=shirley_qdiag$(DEBUG).x
-#SHIRLEY_QDIAGP_EXE=shirley_qdiagp$(DEBUG).x
 #SHIRLEY_PLOT_EXE=shirley_plot$(DEBUG).x
 #SHIRLEY_XAS_EXE=shirley_xas$(DEBUG).x
 #SHIRLEY_XASRESP_EXE=shirley_xasresp$(DEBUG).x
@@ -465,7 +469,6 @@ SHIRLEY_HAM_EXE=shirley_ham$(DEBUG).x
 #JDOS_PARA_EXE=jdos_para$(DEBUG).x
 #XAS_PARA_EXE=xas_para$(DEBUG).x
 #XARS_PARA_EXE=xars_para$(DEBUG).x
-#BANDSTRUCT_EXE=bandstruct$(DEBUG).x
 #COND_PARA_EXE=cond_para$(DEBUG).x
 #EFERMI_EXE=efermi$(DEBUG).x
 #PLASMA_FREQ_EXE=plasma_freq$(DEBUG).x
@@ -497,9 +500,9 @@ TLDEPS= bindir mods libs pw
 all : tldeps \
 $(SHIRLEY_BASIS_EXE) \
 $(SHIRLEY_HAM_EXE) \
+$(SHIRLEY_QDIAGP_EXE) \
+$(BANDSTRUCT_EXE) \
 #$(SHIRLEY_OVERLAP_EXE) \
-#$(SHIRLEY_QDIAGP_EXE) \
-#$(BANDSTRUCT_EXE) \
 #$(EFERMI_EXE) \
 #$(SHIRLEY_XAS_EXE) \
 #$(XAS_PARA_EXE) \
@@ -748,15 +751,24 @@ $(SHIRLEY_HAM_EXE) \
 #	- ( cd ../bin ; $(COPY) ../SHIRLEY/$@ . )
 
 $(SHIRLEY_BASIS_EXE) : $(SHIRLEY_BASIS) $(LIBOBJS) $(QEMODS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 	       $(SHIRLEY_BASIS) $(LIBOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 $(SHIRLEY_HAM_EXE) : $(SHIRLEY_HAM) $(LIBOBJS) $(QEMODS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 	       $(SHIRLEY_HAM) $(LIBOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
+$(SHIRLEY_QDIAGP_EXE) : $(SHIRLEY_QDIAGP) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(SHIRLEY_QDIAGP) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(BANDSTRUCT_EXE) : $(BANDSTRUCT) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(BANDSTRUCT) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

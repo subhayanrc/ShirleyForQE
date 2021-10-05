@@ -23,7 +23,7 @@ PSEUDO_LIST="au.cpi.UPF"
 
 # hack to fix pseudo directory
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-SCRIPT_DIR="$BIN_DIR/../scripts"
+SCRIPT_DIR="$EXAMPLE_DIR/../../scripts"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -343,6 +343,39 @@ KPTS=" K_POINTS tpiba
 nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
 if [ -e CRASH ] ; then exit ; fi
 $SCRIPT_DIR/pwbands.pl < $PREFIX.nscf.out > $PREFIX.nscf.eig
+
+cat >> $PREFIX.qdiag.dump.gnuplot << EOF
+set style data p
+replot 'au.nscf.eig' u 5:(\$6-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$7-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$8-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$9-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$10-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$11-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$12-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$13-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$14-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$15-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$16-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$17-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$18-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$19-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$20-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$21-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$22-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$23-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$24-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$25-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$26-efermi) pt 6 ps 1 lc 3 \\
+, '' u 5:(\$27-efermi) pt 6 ps 1 pc 3 
+set output '$PREFIX.png'
+set term png
+replot
+EOF
+
+gnuplot $PREFIX.qdiag.dump.gnuplot
+open $PREFIX.png
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

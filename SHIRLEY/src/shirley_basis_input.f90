@@ -20,8 +20,8 @@
   subroutine get_input
 !----------------------------------------------------------------------- 
   !
+  use mp_world, only : world_comm
   use mp, only : mp_bcast
-  USE mp_images, ONLY : intra_image_comm
   use io_global, only : ionode, ionode_id
   ! 
   INTEGER :: ios, l
@@ -53,14 +53,14 @@
   ! 
   ! ... Broadcast variables 
   ! 
-  CALL mp_bcast( outdir, ionode_id, intra_image_comm ) 
-  CALL mp_bcast( prefix,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( trace_tol,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( ndim,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( band_subset,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( expand_kpts,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( ecut_in,  ionode_id, intra_image_comm ) 
-  CALL mp_bcast( debug,  ionode_id, intra_image_comm ) 
+  CALL mp_bcast( outdir, ionode_id, world_comm ) 
+  CALL mp_bcast( prefix,  ionode_id, world_comm ) 
+  CALL mp_bcast( trace_tol,  ionode_id, world_comm ) 
+  CALL mp_bcast( ndim,  ionode_id, world_comm ) 
+  CALL mp_bcast( band_subset,  ionode_id, world_comm ) 
+  CALL mp_bcast( expand_kpts,  ionode_id, world_comm ) 
+  CALL mp_bcast( ecut_in,  ionode_id, world_comm ) 
+  CALL mp_bcast( debug,  ionode_id, world_comm ) 
   ! 
   return
   end subroutine get_input

@@ -139,6 +139,52 @@ END SUBROUTINE mp_synchronize
    END SUBROUTINE bcast_integer
 
 
+   SUBROUTINE BCAST_INTEGER8( array, n, root, gid )
+        USE parallel_include  
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: n, root, gid
+        INTEGER(kind=MPI_OFFSET_KIND) :: array( n )
+#if defined __MPI
+        INTEGER :: msgsiz_max = __MSGSIZ_MAX
+        INTEGER :: nblk, blksiz, iblk, istart, ierr
+
+#if defined __TRACE
+        write(*,*) 'BCAST_INTEGER IN'
+#endif
+
+        IF( n <= 0 ) GO TO 1
+
+#if defined __USE_BARRIER
+        CALL mp_synchronize( gid )
+#endif
+
+        IF( n <= msgsiz_max ) THEN
+           CALL MPI_BCAST( array, n, MPI_INTEGER8, root, gid, ierr )
+           IF( ierr /= 0 ) CALL errore( ' bcast_integer ', ' error in mpi_bcast 1 ', ierr )
+        ELSE
+           nblk   = n / msgsiz_max
+           blksiz = msgsiz_max
+           DO iblk = 1, nblk
+              istart = (iblk-1)*msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_INTEGER8, root, gid, ierr )
+              IF( ierr /= 0 ) CALL errore( ' bcast_integer ', ' error in mpi_bcast 2 ', ierr )
+           END DO
+           blksiz = MOD( n, msgsiz_max )
+           IF( blksiz > 0 ) THEN
+              istart = nblk * msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_INTEGER8, root, gid, ierr )
+              IF( ierr /= 0 ) CALL errore( ' bcast_integer ', ' error in mpi_bcast 3 ', ierr )
+           END IF
+        END IF
+1       CONTINUE
+#if defined __TRACE
+        write(*,*) 'BCAST_INTEGER OUT'
+#endif
+#endif
+        RETURN
+   END SUBROUTINE BCAST_INTEGER8
+
+
    SUBROUTINE bcast_logical( array, n, root, gid )
         USE parallel_include  
         IMPLICIT NONE

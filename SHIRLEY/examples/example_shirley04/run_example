@@ -23,7 +23,7 @@ PSEUDO_LIST="Mg.PBE_TM.UPF O.PBE_TM.UPF"
 
 # hack to fix pseudo directory
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-SCRIPT_DIR="$BIN_DIR/../scripts"
+SCRIPT_DIR="$EXAMPLE_DIR/../../scripts"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"

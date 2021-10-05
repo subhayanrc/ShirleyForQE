@@ -23,7 +23,7 @@ PSEUDO_LIST="oxygen-pbe.UPF hydrogen-pbe.UPF"
 
 # hack to fix pseudo directory
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-SCRIPT_DIR="$BIN_DIR/../scripts"
+SCRIPT_DIR="$EXAMPLE_DIR/../../scripts"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -149,7 +149,7 @@ function scf_calc {
   tstress = .true.
   tprnfor = .true.
   outdir = '${TMP_DIR}'
-  prefix = '${PREFIX}.scf'
+  prefix = '${PREFIX}'
   pseudo_dir = '$PSEUDO_DIR'
  /
  $SYSTEM
@@ -183,7 +183,7 @@ function nscf_calc {
   tstress = .true.
   tprnfor = .true.
   outdir = '${TMP_DIR}'
-  prefix = '${PREFIX}.nscf'
+  prefix = '${PREFIX}'
   pseudo_dir = '$PSEUDO_DIR'
  /
  $SYSTEM
@@ -255,8 +255,8 @@ function shirley_qdiag {
 
   cat > ${PREFIX}.qdiag.in << EOF
  &input
-  hamqfile = '$TMP_DIR/${PREFIX}_opt.hamq'
-  vnlfile = '$TMP_DIR/${PREFIX}_opt.vnla'
+  prefix = '${PREFIX}_opt'
+  outdir = '$TMP_DIR'
   outfile = '$PREFIX.qdiag.dump'
  /
  $KPTS
@@ -271,29 +271,27 @@ PW="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 SHIRLEYBASIS="$PARA_PREFIX $BIN_DIR/shirley_basis.x $PARA_POSTFIX"
 SHIRLEYHAM="$PARA_PREFIX $BIN_DIR/shirley_ham.x $PARA_POSTFIX"
 SHIRLEYQDIAG="$PARA_PREFIX $BIN_DIR/shirley_qdiagp.x $PARA_POSTFIX"
+BANDSTRUCT="$BIN_DIR/bandstruct.x"
 
 echo "==== SCF ===="
 KPTS=" K_POINTS automatic
   1 1 1 0 0 0"
-scf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW"
+#scf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW"
 if [ -e CRASH ] ; then exit ; fi
 
 echo "==== NSCF ===="
 NBND_NSCF=96
 KPTS=" K_POINTS automatic
   1 1 1 0 0 0"
-cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.nscf.rho
-nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
+#nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
 if [ -e CRASH ] ; then exit ; fi
 
 echo "==== SHIRLEY_BASIS ===="
-cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.rho
-cp $TMP_DIR/$PREFIX.nscf.save $TMP_DIR/$PREFIX.save
-shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
+#shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
 
 echo "==== SHIRLEY_HAM ===="
 KPT_HAM=" 2 2 2 0 0 0"
-shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
+#shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
 
 echo "==== SHIRLEY_QDIAG ===="
 KPT_QDIAG=" K_POINTS
@@ -311,6 +309,7 @@ KPT_QDIAG=" K_POINTS
   0.0 0.0 0.9 1.0
   0.0 0.0 1.0 1.0"
 shirley_qdiag "$PREFIX" "$TMP_DIR" "$KPT_QDIAG" "$SHIRLEYQDIAG"
+$BANDSTRUCT $PREFIX.qdiag.dump
 
 echo "==== NSCF check ===="
 KPTS=" K_POINTS crystal
@@ -326,17 +325,12 @@ KPTS=" K_POINTS crystal
   0.0 0.0 0.8 1.0
   0.0 0.0 0.9 1.0
   0.0 0.0 1.0 1.0"
-cp $TMP_DIR/$PREFIX.scf.rho $TMP_DIR/$PREFIX.nscf.rho
 nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
 if [ -e CRASH ] ; then exit ; fi
 
 echo "==== checking eigenvalue differences ===="
 $SCRIPT_DIR/pwbands.pl < $PREFIX.nscf.out > $PREFIX.nscf.eig
-if test -e $PREFIX.qdiag.eig ; then rm -f $PREFIX.qdiag.eig ; fi
-for file in $PREFIX.qdiag.dump.* ; do
-  cat $file >> $PREFIX.qdiag.eig
-done
-$SCRIPT_DIR/diff_eigvals.pl $PREFIX.nscf.eig 5 $PREFIX.qdiag.eig 4 
+$SCRIPT_DIR/diff_eigvals.pl $PREFIX.nscf.eig 5 $PREFIX.qdiag.dump.bandstruct 5
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

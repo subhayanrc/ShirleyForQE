@@ -18,7 +18,7 @@ $ECHO "the eigenvalues of Na throughout the Brillouin Zone."
 
 # required executables and pseudopotentials
 #BIN_LIST="pw.x shirley_basis.x shirley_ham.x shirley_qdiagp.x"
-BIN_LIST="pw.x shirley_basis.x"
+BIN_LIST="pw.x shirley_basis.x shirley_ham.x"
 #SCRIPT_LIST="pwbands.pl diff_eigvals.pl"
 SCRIPT_LIST=""
 PSEUDO_LIST="Na.cpi.UPF"
@@ -259,11 +259,10 @@ if [ -e CRASH ] ; then exit ; fi
 echo "==== SHIRLEY_BASIS ===="
 shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
 
-exit
-
 echo "==== SHIRLEY_HAM ===="
 KPT_HAM=" 2 2 2 0 0 0"
 shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
+
 
 #echo "==== SHIRLEY_QDIAG ===="
 #KPT_QDIAG=" K_POINTS
@@ -345,6 +344,24 @@ KPTS=" K_POINTS tpiba
 nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
 if [ -e CRASH ] ; then exit ; fi
 $SCRIPT_DIR/pwbands.pl < $PREFIX.nscf.out > $PREFIX.nscf.eig
+
+cat >> $PREFIX.qdiag.dump.gnuplot << EOF
+set style data p
+replot 'na.nscf.eig' u 5:(\$6-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$7-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$8-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$9-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$10-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$11-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$12-efermi) pt 6 ps 1 lc 2 \
+, '' u 5:(\$13-efermi) pt 6 ps 1 lc 2 
+set output '$PREFIX.png'
+set term png
+replot
+EOF
+
+gnuplot $PREFIX.qdiag.dump.gnuplot
+open $PREFIX.png
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

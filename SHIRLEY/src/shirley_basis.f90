@@ -20,7 +20,8 @@ PROGRAM shirley_basis
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : prefix, tmp_dir 
   USE mp,         ONLY : mp_rank      
-  USE mp_global,  ONLY : npool
+  USE mp_world,   ONLY : world_comm
+  USE mp_pools,   ONLY : npool
   USE mp_bands,   ONLY : ntask_groups
   USE basis,                ONLY : starting_pot, starting_wfc
   !
@@ -28,6 +29,8 @@ PROGRAM shirley_basis
                                   prefix_input=>prefix, &
                                   tmp_dir_input=>outdir, &
                                   debug
+  !
+  implicit none
   !
   CALL start_shirley () 
   !
@@ -58,7 +61,7 @@ PROGRAM shirley_basis
   ! read input and distribute
   call get_input
   !
-  if( debug .and. .not. ionode ) stdout = 500+mp_rank(MPI_COMM_WORLD)
+  if( debug .and. .not. ionode ) stdout = 500+mp_rank(world_comm)
   !
   prefix = prefix_input
   tmp_dir = tmp_dir_input

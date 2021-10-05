@@ -35,7 +35,8 @@
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
-          mp_bcast_c5d, mp_bcast_c6d
+          mp_bcast_c5d, mp_bcast_c6d, &
+          mp_bcast_i1_8
       END INTERFACE
 
       INTERFACE mp_sum
@@ -664,6 +665,25 @@
 #endif
       END SUBROUTINE mp_bcast_zv
 !
+! davegp
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_i1_8(msg,source,gid)
+        IMPLICIT NONE
+        INTEGER(kind=MPI_OFFSET_KIND) :: msg
+        INTEGER :: source
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+
+#if defined(__MPI)
+        msglen = 1
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL BCAST_INTEGER8( msg, msglen, source, group )
+#endif
+      END SUBROUTINE mp_bcast_i1_8
+!
+! davegp
 !------------------------------------------------------------------------------!
 !
 ! Carlo Cavazzoni

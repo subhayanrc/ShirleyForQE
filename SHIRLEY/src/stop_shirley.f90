@@ -51,5 +51,4 @@ subroutine stop_shirley
   call set_d_stream (0)
 #endif
 
-  stop
 end subroutine stop_shirley

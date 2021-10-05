@@ -205,7 +205,7 @@ PROGRAM shirley_ham
     ! ======================================================================
     ! Should I turn on spin here? Or before this select block?
     !CALL hinit0()
-    !CALL potinit()
+    CALL potinit()
     !CALL newd()
 
 !    ! are these guys spin-dependent?

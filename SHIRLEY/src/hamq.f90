@@ -331,6 +331,8 @@
         !
         ! ... product with the potential vrs = (vltot+v) on the smooth grid
         !
+        write(stdout,*) ' vrs = ', vrs(1:10,ispin)
+        !
         psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,ispin)
         !
         ! ... back to reciprocal space
@@ -556,7 +558,7 @@
       !call flush_unit(stdout)
 
       ! CALL init_us_2( npw, igk_k(1,ik), xk_cart(1:3,ik), vkb )
-      call init_us_2_shirley( npw, igk_k(1,ik), xk_cart(1:3,ik), vkb )
+      call init_us_2_shirley( npw, igk_k(1,1), xk_cart(1:3,ik), vkb )
       write(stdout,*) 'init_us_2_shirley'
 
       ibnd=0
@@ -689,7 +691,7 @@
       write(stdout,'(x,a,3f12.5)') ' xk_cart = ', xk_cart(1:3,ik)
       !call flush_unit(stdout)
 
-      call orthoatwfc_shirley( npw, igk_k(1,ik), xk_cart(1:3,ik) )
+      call orthoatwfc_shirley( npw, igk_k(1,1), xk_cart(1:3,ik) )
 
       ! reduce swfcatom to only those elements necessary for LDA+U
       ikb=0
