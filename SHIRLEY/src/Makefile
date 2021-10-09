@@ -42,15 +42,12 @@ gk_l2gmap.o \
 kpoint_expand.o \
 rgrid.o 
 
-#bz.o \
-check_energies.o \
-read_file_shirley.o \
-
 SHIRLEY_HAM = \
 shirley_ham.o \
 shirley_ham_input.o \
 start_shirley.o \
 stop_shirley.o \
+read_file_shirley.o \
 append_missing_slash.o \
 hamq.o \
 print_clock_shirley.o \
@@ -88,24 +85,10 @@ start_shirley.o
 
 BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
 
-#B0.o \
-#elph_shirley.o \
-#get_dnl.o \
-#get_proj_ham.o \
-#gk_l2gmap.o \
-#interaction.o \
-#interaction_test.o \
-#kpt.o \
-#qinteraction.o \
-#plot.o \
-#plot_basis.o \
-#pole_strength.o \
-#proj_shirley.o \
-#pwmat.o \
-#read_file_shirley.o \
-#rgrid.o \
-#triples.o \
-#trnvect_wrapper.o \
+SHIRLEY_XAS = shirley_xas.o $(NEWDIAGOBJ)
+XAS_PARA = xas_para.o start_shirley.o freeunit.o mpio.o
+EFERMI = efermi.o fermi.o \
+$(NEWDIAGOBJ)
 #
 #SHIRLEY_OVERLAP = \
 #append_missing_slash.o \
@@ -137,7 +120,6 @@ BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
 #
 ##SHIRLEY_QDIAG = shirley_qdiag.o $(DIAGOBJ)
 #
-#SHIRLEY_XAS = shirley_xas.o $(NEWDIAGOBJ)
 #SHIRLEY_XASRESP = shirley_xasresp.o gmres.o zPackgmres.o $(NEWDIAGOBJ)
 #SHIRLEY_EIG = shirley_eig.o $(NEWDIAGOBJ)
 #SHIRLEY_PROJ = shirley_proj.o splines.o $(NEWDIAGOBJ)
@@ -151,13 +133,9 @@ BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
 #DOS_PARA = dos_para.o start_shirley.o freeunit.o
 #PDOS_PARA = pdos_para.o start_shirley.o proj_shirley.o freeunit.o
 #JDOS_PARA = jdos_para.o start_shirley.o freeunit.o
-#XAS_PARA = xas_para.o start_shirley.o freeunit.o mpio.o
 #XARS_PARA = xars_para.o start_shirley.o freeunit.o mpio.o
 #COND_PARA = cond_para.o fermi.o start_shirley.o freeunit.o mpio.o \
 #            ../PW/efermit.o ../PW/sumkt.o ../flib/dost.o ../flib/sort.o
-#EFERMI = efermi.o fermi.o \
-#            ../PW/efermit.o ../PW/sumkt.o ../flib/dost.o ../flib/sort.o \
-#            $(NEWDIAGOBJ)
 #PLASMA_FREQ = plasma_freq.o fermi.o start_shirley.o freeunit.o mpio.o
 #
 #SHIRLEY_OPT = shirley_opt.o $(NEWDIAGOBJ)
@@ -210,254 +188,18 @@ BANDSTRUCT = bandstruct.o start_shirley.o freeunit.o mpio.o
 #start_shirley.o \
 #stop_shirley.o \
 #writetest.o
-#
-#MODULES = \
-#../Modules/atom.o \
-#../Modules/basic_algebra_routines.o \
-#../Modules/cell_base.o \
-#../Modules/check_stop.o \
-#../Modules/clocks.o \
-#../Modules/constants.o \
-#../Modules/constraints_module.o \
-#../Modules/control_flags.o \
-#../Modules/coulomb_vcut.o \
-#../Modules/descriptors.o \
-#../Modules/dspev_drv.o \
-#../Modules/electrons_base.o \
-#../Modules/environment.o \
-#../Modules/error_handler.o \
-#../Modules/fft_base.o \
-#../Modules/fft_interfaces.o \
-#../Modules/fft_parallel.o \
-#../Modules/fft_scalar.o \
-#../Modules/fft_types.o \
-#../Modules/funct.o \
-#../Modules/griddim.o \
-#../Modules/image_io_routines.o \
-#../Modules/input_parameters.o \
-#../Modules/io_files.o \
-#../Modules/io_global.o \
-#../Modules/ions_base.o \
-#../Modules/kind.o \
-#../Modules/mm_dispersion.o \
-#../Modules/mp.o \
-#../Modules/mp_base.o \
-#../Modules/mp_global.o \
-#../Modules/mp_wave.o \
-#../Modules/parallel_include.o \
-#../Modules/parameters.o \
-#../Modules/parser.o \
-#../Modules/paw_variables.o \
-#../Modules/printout_base.o \
-#../Modules/pseudo_types.o \
-#../Modules/ptoolkit.o \
-#../Modules/radial_grids.o \
-#../Modules/random_numbers.o \
-#../Modules/read_ncpp.o \
-#../Modules/read_upf_v1.o \
-#../Modules/read_upf_v2.o \
-#../Modules/read_uspp.o \
-#../Modules/recvec.o \
-#../Modules/recvec_subs.o \
-#../Modules/splinelib.o \
-#../Modules/stick_base.o \
-#../Modules/stick_set.o \
-#../Modules/timestep.o \
-#../Modules/uspp.o \
-#../Modules/upf.o \
-#../Modules/upf_to_internal.o \
-#../Modules/version.o \
-#../Modules/wannier.o \
-#../Modules/wannier_new.o \
-#../Modules/wavefunctions.o \
-#../Modules/wrappers.o \
-#../Modules/write_upf_v2.o \
-#../Modules/ws_base.o \
-#../Modules/xml_io_base.o \
-#../Modules/zhpev_drv.o 
-#
-#PWOBJS = \
-#../PW/a2fmod.o \
-#../PW/add_bfield.o \
-#../PW/add_efield.o \
-#../PW/add_paw_to_deeq.o \
-#../PW/add_vuspsi.o \
-#../PW/addusdens.o \
-#../PW/allocate_bp_efield.o \
-#../PW/allocate_fft.o \
-#../PW/allocate_locpot.o \
-#../PW/allocate_nlpot.o \
-#../PW/allocate_wfc.o \
-#../PW/atomic_rho.o \
-#../PW/atomic_wfc.o \
-#../PW/average_pp.o \
-#../PW/becmod.o \
-#../PW/bp_c_phase.o \
-#../PW/bp_calc_btq.o \
-#../PW/bp_qvan3.o \
-#../PW/bp_strings.o \
-#../PW/buffers.o \
-#../PW/ccgdiagg.o \
-#../PW/cdiagh.o \
-#../PW/cdiaghg.o \
-#../PW/cegterg.o \
-#../PW/clean_pw.o \
-#../PW/close_files.o \
-#../PW/compute_dip.o \
-#../PW/compute_rho.o \
-#../PW/compute_ux.o \
-#../PW/coset.o \
-#../PW/d_matrix.o \
-#../PW/data_structure.o \
-#../PW/deriv_drhoc.o \
-#../PW/divide.o \
-#../PW/divide_class.o \
-#../PW/divide_class_so.o \
-#../PW/divide_et_impera.o \
-#../PW/dqvan2.o \
-#../PW/drhoc.o \
-#../PW/dvloc_of_g.o \
-#../PW/dynamics_module.o \
-#../PW/efermig.o \
-#../PW/efermit.o \
-#../PW/eqvect.o \
-#../PW/ewald.o \
-#../PW/ewald_dipole.o \
-#../PW/exx.o \
-#../PW/find_group.o \
-#../PW/g_psi.o \
-#../PW/g_psi_mod.o \
-#../PW/g2_kin.o \
-#../PW/gen_at_dj.o \
-#../PW/gen_at_dy.o \
-#../PW/gen_us_dj.o \
-#../PW/gen_us_dy.o \
-#../PW/get_locals.o \
-#../PW/gk_sort.o \
-#../PW/gradcorr.o \
-#../PW/gweights.o \
-#../PW/h_1psi.o \
-#../PW/h_epsi_her_apply.o \
-#../PW/h_epsi_her_set.o \
-#../PW/h_psi.o \
-#../PW/h_psi_meta.o \
-#../PW/hinit0.o \
-#../PW/hinit1.o \
-#../PW/init_at_1.o \
-#../PW/init_ns.o \
-#../PW/init_run.o \
-#../PW/init_us_1.o \
-#../PW/init_us_2.o \
-#../PW/init_vloc.o \
-#../PW/interpolate.o \
-#../PW/io_rho_xml.o \
-#../PW/irrek.o \
-#../PW/iweights.o \
-#../PW/kernel_table.o \
-#../PW/kpoint_grid.o \
-#../PW/lchk_tauxk.o \
-#../PW/make_pointlists.o \
-#../PW/martyna_tuckerman.o \
-#../PW/memory_report.o \
-#../PW/multable.o \
-#../PW/n_plane_waves.o \
-#../PW/new_ns.o \
-#../PW/new_occ.o \
-#../PW/newd.o \
-#../PW/noncol.o \
-#../PW/ns_adj.o \
-#../PW/offset_atom_wfc.o \
-#../PW/openfil.o \
-#../PW/ortho_wfc.o \
-#../PW/orthoatwfc.o \
-#../PW/output_tau.o \
-#../PW/para.o \
-#../PW/paw_init.o \
-#../PW/paw_onecenter.o \
-#../PW/paw_symmetry.o \
-#../PW/potinit.o \
-#../PW/print_clock_pw.o \
-#../PW/punch.o \
-#../PW/pwcom.o \
-#../PW/pw_restart.o \
-#../PW/qvan2.o \
-#../PW/rcgdiagg.o \
-#../PW/rdiaghg.o \
-#../PW/read_pseudo.o \
-#../PW/realus.o \
-#../PW/report_mag.o \
-#../PW/rho2zeta.o \
-#../PW/rotate_wfc.o \
-#../PW/rotate_wfc_gamma.o \
-#../PW/rotate_wfc_k.o \
-#../PW/ruotaijk.o \
-#../PW/s_1psi.o \
-#../PW/s_psi.o \
-#../PW/save_in_cbands.o \
-#../PW/save_in_electrons.o \
-#../PW/save_in_ions.o \
-#../PW/scale_h.o \
-#../PW/scf_mod.o \
-#../PW/seqopn.o \
-#../PW/set_hubbard_l.o \
-#../PW/set_kplusq.o \
-#../PW/set_kup_and_kdw.o \
-#../PW/set_rhoc.o \
-#../PW/set_vrs.o \
-#../PW/setlocal.o \
-#../PW/setqf.o \
-#../PW/setup.o \
-#../PW/spinor.o \
-#../PW/sph_ind.o \
-#../PW/struct_fact.o \
-#../PW/sum_band.o \
-#../PW/sumkg.o \
-#../PW/sumkt.o \
-#../PW/summary.o \
-#../PW/symm_base.o \
-#../PW/symme.o \
-#../PW/tabd.o \
-#../PW/transform_becsum_nc.o \
-#../PW/transform_becsum_so.o \
-#../PW/trnvecc.o \
-#../PW/tweights.o \
-#../PW/update_pot.o \
-#../PW/usnldiag.o \
-#../PW/v_of_rho.o \
-#../PW/vhpsi.o \
-#../PW/vloc_of_g.o \
-#../PW/vloc_psi.o \
-#../PW/wannier_check.o \
-#../PW/wannier_clean.o \
-#../PW/wannier_init.o \
-#../PW/weights.o \
-#../PW/wfcinit.o \
-#../PW/write_ns.o \
-#../PW/wsweight.o \
-#../PW/xc_vdW_DF.o
-#
-#PW_QDIAG = \
-#../flib/date_and_tim.o \
-#../flib/flush_unit.o \
-#../PW/cdiagh.o 
-#
-#PPOBJS = ../PP/xsf.o ../PP/cube.o
-#
-##../PW/cdiagh.o \
-#
-#PW_QDIAGP = \
-#../flib/date_and_tim.o \
-#../flib/flush_unit.o \
-#../flib/inpfile.o 
 
 SHIRLEY_BASIS_EXE=shirley_basis$(DEBUG).x
 SHIRLEY_HAM_EXE=shirley_ham$(DEBUG).x
 SHIRLEY_QDIAGP_EXE=shirley_qdiagp$(DEBUG).x
 BANDSTRUCT_EXE=bandstruct$(DEBUG).x
+SHIRLEY_XAS_EXE=shirley_xas$(DEBUG).x
+XAS_PARA_EXE=xas_para$(DEBUG).x
+EFERMI_EXE=efermi$(DEBUG).x
+
 #SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 ##SHIRLEY_QDIAG_EXE=shirley_qdiag$(DEBUG).x
 #SHIRLEY_PLOT_EXE=shirley_plot$(DEBUG).x
-#SHIRLEY_XAS_EXE=shirley_xas$(DEBUG).x
 #SHIRLEY_XASRESP_EXE=shirley_xasresp$(DEBUG).x
 #SHIRLEY_EIG_EXE=shirley_eig$(DEBUG).x
 #SHIRLEY_PROJ_EXE=shirley_proj$(DEBUG).x
@@ -467,10 +209,8 @@ BANDSTRUCT_EXE=bandstruct$(DEBUG).x
 #DOS_PARA_EXE=dos_para$(DEBUG).x
 #PDOS_PARA_EXE=pdos_para$(DEBUG).x
 #JDOS_PARA_EXE=jdos_para$(DEBUG).x
-#XAS_PARA_EXE=xas_para$(DEBUG).x
 #XARS_PARA_EXE=xars_para$(DEBUG).x
 #COND_PARA_EXE=cond_para$(DEBUG).x
-#EFERMI_EXE=efermi$(DEBUG).x
 #PLASMA_FREQ_EXE=plasma_freq$(DEBUG).x
 #GETTEST_EXE=gettest$(DEBUG).x
 #SHIRLEY_OPT_EXE=shirley_opt$(DEBUG).x
@@ -502,10 +242,10 @@ $(SHIRLEY_BASIS_EXE) \
 $(SHIRLEY_HAM_EXE) \
 $(SHIRLEY_QDIAGP_EXE) \
 $(BANDSTRUCT_EXE) \
+$(EFERMI_EXE) \
+$(SHIRLEY_XAS_EXE) \
+$(XAS_PARA_EXE) \
 #$(SHIRLEY_OVERLAP_EXE) \
-#$(EFERMI_EXE) \
-#$(SHIRLEY_XAS_EXE) \
-#$(XAS_PARA_EXE) \
 #$(XARS_PARA_EXE) \
 #$(SHIRLEY_EIG_EXE) \
 #$(SHIRLEY_PROJ_EXE) \
@@ -768,6 +508,21 @@ $(SHIRLEY_QDIAGP_EXE) : $(SHIRLEY_QDIAGP) $(LIBOBJS) $(QEMODS)
 $(BANDSTRUCT_EXE) : $(BANDSTRUCT) $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	       $(BANDSTRUCT) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(SHIRLEY_XAS_EXE) : $(SHIRLEY_XAS) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(SHIRLEY_XAS) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(XAS_PARA_EXE) : $(XAS_PARA) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(XAS_PARA) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(EFERMI_EXE) : $(EFERMI) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(EFERMI) $(LIBOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 tldeps:
