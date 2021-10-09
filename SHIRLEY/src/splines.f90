@@ -4,7 +4,7 @@
 ! assumes periodic splines
 
   use kinds, only : dp
-  use bspline
+  use bspline90_22
 
   implicit none
 
