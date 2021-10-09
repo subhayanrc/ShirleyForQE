@@ -15,7 +15,6 @@ PROGRAM shirley_basis
   ! Generates the optimal basis set for Shirley Brillouin zone interpolation
   ! of electronic wave functions for use in the parametrized Shirley Hamiltonian
   !
-!#include "f_defs.h" 
   USE parameters,         ONLY : ntypx, npk, lmaxx
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : prefix, tmp_dir 
@@ -66,25 +65,9 @@ PROGRAM shirley_basis
   prefix = prefix_input
   tmp_dir = tmp_dir_input
   !
-  ! davegp - put read_file () here
   call read_file()
   !
-!  !
-!  ! this is a nonselfconsistent run
-!  lscf = .false.
-!  starting_pot = 'file'
-!  starting_wfc = 'file'
-!  !
-!  !   Now allocate space for pwscf variables, read and check them. 
-!  ! 
-!  call read_file_shirley( 0 )
-!  !
-!  call openfil
-!  !
-!  CALL hinit0()
-!  CALL potinit()
-!  !
-!  CALL newd()
+  call openfil
   !
   CALL wfcinit()
   !

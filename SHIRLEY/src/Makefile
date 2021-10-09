@@ -90,13 +90,15 @@ XAS_PARA = xas_para.o start_shirley.o freeunit.o mpio.o
 EFERMI = efermi.o fermi.o \
 $(NEWDIAGOBJ)
 #
-#SHIRLEY_OVERLAP = \
-#append_missing_slash.o \
-#print_clock_shirley.o \
-#shirley_overlap.o \
-#shirley_overlap_input.o \
-#start_shirley.o \
-#stop_shirley.o 
+SHIRLEY_OVERLAP = \
+append_missing_slash.o \
+print_clock_shirley.o \
+shirley_overlap.o \
+read_file_shirley.o \
+reallocate_nlpot.o \
+shirley_overlap_input.o \
+start_shirley.o \
+stop_shirley.o 
 #
 #DIAGOBJ= \
 #bspline90_22.o \
@@ -196,6 +198,7 @@ BANDSTRUCT_EXE=bandstruct$(DEBUG).x
 SHIRLEY_XAS_EXE=shirley_xas$(DEBUG).x
 XAS_PARA_EXE=xas_para$(DEBUG).x
 EFERMI_EXE=efermi$(DEBUG).x
+SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 
 #SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 ##SHIRLEY_QDIAG_EXE=shirley_qdiag$(DEBUG).x
@@ -523,6 +526,11 @@ $(XAS_PARA_EXE) : $(XAS_PARA) $(LIBOBJS) $(QEMODS)
 $(EFERMI_EXE) : $(EFERMI) $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	       $(EFERMI) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(SHIRLEY_OVERLAP_EXE) : $(SHIRLEY_OVERLAP) $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(SHIRLEY_OVERLAP) $(LIBOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 tldeps:

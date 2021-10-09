@@ -82,6 +82,7 @@ POSN=$(( XATOM + 1 ))  # add one
 nat=10
 ntyp=3
 nelec=27.0
+tot_charge=1.0
 
 CATOM=`seq -w $XATOM $nat | head -1`
 NAME=${NAME}.${XSYMBOL}${CATOM}-${CHAPPROX}
@@ -90,7 +91,7 @@ echo $NAME
 
 SYSTEM="&system
     ibrav=  1, a=10.0
-    nat=  $nat, ntyp= $ntyp, nelec=$nelec
+    nat=  $nat, ntyp= $ntyp, tot_charge= $tot_charge
     nbnd= 54, occupations = 'smearing', degauss = 7.e-4
     ecutwfc =70.0"
 
@@ -160,10 +161,6 @@ $ATOMIC_POSITIONS
  1 1 1 0 0 0
 EOFSCF
 $PW < $INPUT > $OUTPUT || exit
-
-#save
-cp $outdir/$NAME.save $outdir/$PREFIX.save || exit
-cp $outdir/$NAME.rho $outdir/$PREFIX.rho || exit
 }
 
 
@@ -240,7 +237,7 @@ cat > $INPUT <<EOFHAM
   prefix='${NAME}_opt'
   outdir='$outdir'
   updatepp = .true.
-  pseudo_dir = '$pseudo_dir'
+  pseudo_dir = '$pseudo_dir/'
 /
 K_POINTS
   2 2 2 0 0 0
@@ -292,8 +289,8 @@ XAS="$PARA_PREFIX $BIN_DIR/shirley_xas.x $NPROCPERPOOL $PARA_POSTFIX"
 XASPARA="$PARA_PREFIX $BIN_DIR/xas_para.x $PARA_POSTFIX"
 
 # run
-scf
-nscf
+#scf
+#nscf
 basis
 ham
 xas 8

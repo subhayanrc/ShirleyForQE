@@ -66,9 +66,6 @@
           ref_charge
 
   if( lda_plus_u ) then
-    write(stdout,*) 'LDA+U - reading occupations'
-    write(stdout,*) rho%ns
-
     ! copy occupancy
     if( allocated(ns) ) deallocate(ns)
     allocate( ns(size(rho%ns,1),size(rho%ns,2),size(rho%ns,3),size(rho%ns,4)) )
@@ -217,14 +214,7 @@
     call errore('write_pot_rho_G','resizing of charge density has led to modified total charge',-1)
 
   ! write potential and charge to output files
-  write(stdout,*) size(rho%of_r,1)
-
   call write_scf( rho, nspin )
-
-  if( lda_plus_u ) then
-    write(stdout,*) 'LDA+U - writing occupations'
-    write(stdout,*) rho%ns
-  endif
 
   return
   end subroutine write_pot_rho_G

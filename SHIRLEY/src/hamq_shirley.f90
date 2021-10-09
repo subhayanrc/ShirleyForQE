@@ -266,8 +266,6 @@
             stat=ierr )
   if( ierr /= 0 ) call errore('alloc_knots','unable to allocate knots',1)
 
-  write(stdout,*) 'alloc_knots: knots allocated'
-
   end subroutine alloc_knots
 
 
@@ -313,8 +311,6 @@
             ascoefI(nxcoef*nycoef*nzcoef,natomproj,n), &
             stat=ierr )
   if( ierr /= 0 ) call errore('alloc_projs_ldaU','unable to allocate ldaU projector coefficients',1)
-
-  write(stdout,*) 'alloc_projs_ldaU: ldaU projector coefficients allocated'
 
   end subroutine alloc_projs_ldaU
 
@@ -762,7 +758,6 @@
   kzord = min(kzord,nzcoef)
 
   write(stdout,*) 'init_vnl_spline:', kxord, kyord, kzord
-  !call flush_unit(stdout)
 
   ! important copying of basis dimension for projectors
   if( nproj /= size( vnl, 2 ) ) call errore('init_vnl_spline','nproj inconsistent with vnl',1)
@@ -787,10 +782,8 @@
   if( ierr /= 0 ) call errore('init_vnl_spline','unable to allocate fdata',1)
 
   write(stdout,*) 'init_vnl_spline: fdata allocated'
-  !call flush_unit(stdout)
 
   write(stdout,*) ' splining '
-  !call flush_unit(stdout)
   do j=1,size(vnl,3)
   do i=1,nproj
     do kc=1,nzcoef
@@ -816,38 +809,6 @@
                  kxord, kyord, kzord, xknot, yknot, zknot, bscoefI(1,i,j) )
   enddo
   enddo
-
-  if( lda_plus_u ) then
-
-    write(stdout,*) ' splining '
-    !call flush_unit(stdout)
-    do j=1,size(vnl,3)
-    do i=1,nproj
-      do kc=1,nzcoef
-      do jc=1,nycoef
-      do ic=1,nxcoef
-        fdata(ic,jc,kc) =  real( vnl( ikmap_inv(ic,jc,kc), i, j ) )
-      enddo
-      enddo
-      enddo
-  
-      call dbs3in( nxcoef, xkxp, nycoef, xkyp, nzcoef, xkzp, fdata, nxcoef, nycoef, &
-                   kxord, kyord, kzord, xknot, yknot, zknot, bscoefR(1,i,j) )
-
-      do kc=1,nzcoef
-      do jc=1,nycoef
-      do ic=1,nxcoef
-        fdata(ic,jc,kc) = aimag( vnl( ikmap_inv(ic,jc,kc), i, j ) )
-      enddo
-      enddo
-      enddo
-  
-      call dbs3in( nxcoef, xkxp, nycoef, xkyp, nzcoef, xkzp, fdata, nxcoef, nycoef, &
-                   kxord, kyord, kzord, xknot, yknot, zknot, bscoefI(1,i,j) )
-    enddo
-    enddo
-
-  endif  ! lda_plus_u
 
   deallocate( fdata )
 
@@ -1313,7 +1274,6 @@
   if( mpime==root ) then
     hamloc_file=trim(prefix)//'.hamloc'
     hamprj_file=trim(prefix)//'.hamprj'
-!    haminf_file=trim(prefix)//'.haminf'
   endif
 
   call mp_bcast( hamloc_file, root, world_comm )
@@ -1321,13 +1281,6 @@
 
   call mp_file_open_dp( hamloc_file, fhhamloc, root, world_comm )
   call mp_file_open_dp( hamprj_file, fhhamprj, root, world_comm )
-
-!  if( mpime==root ) then
-!
-!    fhhaminf=freeunit()
-!    open(fhhaminf,file=trim(haminf_file),form='formatted')
-!
-!  endif
 
   end subroutine open_hamq
 
@@ -1435,20 +1388,15 @@
 
   ! only do this on first pool
   if( mypool == rootpool ) then
-    write(stdout,*) ' reading on pool ', mypoolid, mypoolroot
     call mp_file_scatter_read( fhhamprj, fposn, projsct, &
                                mypoolroot, intra_pool_comm )
   endif
   ! send across pools - within slices
-  write(stdout,*) ' broadcast across slice ', mypool, rootpool
   call mp_bcast( projsct, rootpool, cross_pool_comm )
-
-!  if( nproc_per_pool > 1 ) then
 
   ! redistribute within pool
   proj=zero
   do id=0,nproc_per_pool-1
-    write(stdout,*) ' distributing for mypoolid = ', id
     allocate( projtmp(nk,npg,length_id(id+1)) )
     if( mypoolid==id ) projtmp=projsct
     call mp_bcast( projtmp, id, intra_pool_comm )
@@ -1490,12 +1438,6 @@
     deallocate( projtmp )
   enddo
 
-!  else
-!
-!  proj = projsct
-!
-  !endif
-  
   deallocate( projsct )
 
   end subroutine read_hamprj
@@ -1531,7 +1473,7 @@
   integer :: id
   integer,allocatable :: length_id(:), displ_id(:)
 
-  if( mpime==root ) write(*,*) ' read_hamprj '
+  if( mpime==root ) write(*,*) ' read_hamprj_ldaU '
 
   call mp_scatter_size( size(proj,3), length, mypoolroot, intra_pool_comm )
   call mp_scatter_displ( size(proj,3), displ, mypoolroot, intra_pool_comm )
@@ -1549,20 +1491,15 @@
 
   ! only do this on first pool
   if( mypool == rootpool ) then
-    write(stdout,*) ' reading on pool ', mypoolid, mypoolroot
     call mp_file_scatter_read( fhhamprj, fposn, projsct, &
                                mypoolroot, intra_pool_comm )
   endif
   ! send across pools - within slices
-  write(stdout,*) ' broadcast across slice ', mypool, rootpool
   call mp_bcast( projsct, rootpool, cross_pool_comm )
-
-!  if( nproc_per_pool > 1 ) then
 
   ! redistribute within pool
   proj=zero
   do id=0,nproc_per_pool-1
-    write(stdout,*) ' distributing for mypoolid = ', id
     allocate( projtmp(nk,npg,length_id(id+1)) )
     if( mypoolid==id ) projtmp=projsct
     call mp_bcast( projtmp, id, intra_pool_comm )
@@ -1601,12 +1538,6 @@
     deallocate( projtmp )
   enddo
 
-!  else
-!
-!  proj = projsct
-!
-  !endif
-  
   deallocate( projsct )
 
   end subroutine read_hamprj_ldaU
@@ -1662,18 +1593,15 @@
 
   ! only do this on first pool
   if( mypool == rootpool ) then
-    write(stdout,*) ' reading on pool ', mypoolid, mypoolroot
     call mp_file_scatter_read( fhhamloc, fposn, ham, &
                                mypoolroot, intra_pool_comm )
   endif
   ! send across pools - within slices
-  write(stdout,*) ' broadcast across slice ', mypool, rootpool
   call mp_bcast( ham, rootpool, cross_pool_comm )
 
   ! need to unpack the ham to hmat within pool
   hmat=zero
   do id=0,nproc_per_pool-1
-    write(stdout,*) ' distributing for mypoolid = ', id
     allocate( hamtmp(length_id(id+1)) )
     if( mypoolid==id ) hamtmp=ham
     call mp_bcast( hamtmp, id, intra_pool_comm )
@@ -1863,7 +1791,6 @@
 
   if( lda_plus_u ) then
     call alloc_projs_ldaU( nbasis )
-    write(stdout,*) ' lda+U natomproj = ', natomproj, nbasis, size(ascoefR), size(ascoefI)
     call read_hamprj_ldaU( fposn, ascoefR )
     call read_hamprj_ldaU( fposn, ascoefI )
   endif
@@ -1980,8 +1907,6 @@
   integer :: nbasis_, nproj_, nproj_nl_
   integer :: i
 
-  write(stdout,*) ' bcast_hamdim'
-
   ! system details
   call mp_bcast( nelec, root, world_comm )
   call mp_bcast( alat, root, world_comm )
@@ -1997,12 +1922,8 @@
   call mp_bcast( trkin2nlp, root, world_comm )
   call mp_bcast( trnlp2kin, root, world_comm )
 
-  write(stdout,*) ' bcast_hamdim: transf matrices'
-
   ! size of basis
   call mp_bcast( nbasis, root, world_comm )
-
-  write(stdout,*) ' bcast_hamdim: dims'
 
   call mp_bcast( nproj, root, world_comm )
   call mp_bcast( nproj_nl, root, world_comm )
@@ -2037,8 +1958,6 @@
     call mp_bcast( nycoef, root, world_comm )
     call mp_bcast( nzcoef, root, world_comm )
 
-    write(stdout,*) ' bcast_hamdim: spline dims'
-
     ! allocate space
     if( mpime /= root ) call alloc_knots()
 
@@ -2046,8 +1965,6 @@
     call mp_bcast( xknot, root, world_comm )
     call mp_bcast( yknot, root, world_comm )
     call mp_bcast( zknot, root, world_comm )
-
-    write(stdout,*) ' bcast_hamdim: knots'
 
     ! LDA+U
     if( lda_plus_u ) then
@@ -2058,9 +1975,6 @@
       call mp_bcast( Hubbard_U, root, world_comm )
       call mp_bcast( Hubbard_alpha, root, world_comm )
       call mp_bcast( index_ldaUq, root, world_comm )
-
-      write(stdout,*) ' bcast_hamdim: LDA+U'
-
     endif
   endif
 
@@ -2083,7 +1997,6 @@
     enddo
     write(iunit,*)
   enddo
-  !call flush_unit(iunit)
 
   return
   end subroutine dump_hamq
@@ -2110,7 +2023,6 @@
     enddo
     write(iunit,*)
   enddo
-  !call flush_unit(iunit)
 
   return
   end subroutine dump_hamq_packed
@@ -2126,12 +2038,9 @@
   integer :: iatom
 
   write(iunit) natom
-!  write(stdout,*) natom
   do iatom=1,natom
     write(iunit) size(nloper(iatom)%matrix,1)
-!  write(stdout,*) size(nloper(iatom)%matrix,1)
     write(iunit) nloper(iatom)%matrix
-!  write(stdout,*) size(nloper(iatom)%matrix,1), size(nloper(iatom)%matrix,2)
   enddo
   
   end subroutine write_nloper
@@ -2170,15 +2079,11 @@
   read(iunit) natom_
   if( natom_ /= natom ) &
     call errore('read_nloper','inconsistent number of atoms',abs(natom_))
-  write(stdout,*) natom_
   do iatom=1,natom
     read(iunit) nproj_
-  write(stdout,*) nproj_
     if( nproj_ /= size(nloper(iatom)%matrix,1) ) &
       call errore('read_nloper','inconsistent number of projectors',abs(nproj_))
-    !write(stdout,*) ' size of nloper(', iatom, ')%matrix = ', size(nloper(iatom)%matrix,1), size(nloper(iatom)%matrix,2)
     read(iunit) nloper(iatom)%matrix
-  write(stdout,*) nproj_
   enddo
   
   endif

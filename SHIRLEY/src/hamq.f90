@@ -12,7 +12,7 @@
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE wvfct
   use control_flags, only : gamma_only
-  USE uspp, ONLY: nkb, vkb, dvan, okvan, deeq, nhtol, qq_at
+  USE uspp, ONLY: nkb, vkb, dvan, okvan, deeq, nhtol, qq_at 
 ! davegp
   USE us, ONLY: dq, tab
   USE cellmd, ONLY : cell_factor
@@ -23,13 +23,14 @@
                       allocate_bec_type, deallocate_bec_type, bec_type
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, seqopn
   USE wavefunctions, ONLY: evc, psic
-  USE lsda_mod, ONLY : nspin
+  use buffers, only : open_buffer, close_buffer, get_buffer
+  USE lsda_mod, ONLY : nspin, lsda
   use ldaU, only : lda_plus_u_=>lda_plus_u, &
                    Hubbard_l_ => Hubbard_l, &
                    Hubbard_lmax_ => Hubbard_lmax, &
                    Hubbard_U_ => Hubbard_U, &
                    Hubbard_alpha_ => Hubbard_alpha, &
-                   oatwfc
+                   oatwfc, nwfcU, offsetU
   USE noncollin_module,     ONLY : npol
   use basis, only : natomwfc, swfcatom
   use ener, only : ehart, etxc, vtxc
@@ -85,6 +86,7 @@
   real(dp) :: qvec(3), tqvec(3)
   integer :: iunhq, iunvnl, igwx
   logical :: exst
+
   REAL(DP), EXTERNAL :: erf
   COMPLEX(DP), EXTERNAL :: ZDOTU
   integer,external :: freeunit
@@ -92,10 +94,6 @@
   integer,external :: n_plane_waves
 
   WRITE( stdout, '(/5x,"Calling hamq .... ",/)')
-  write(stdout,*) ' okvan = ', okvan
-  write(stdout,*) ' npw = ', npw
-  write(stdout,*) ' nkb = ', nkb
-  write(stdout,*) ' nbnd = ', nbnd, nbndx
 
   ! ======================================================================
   ! sort out which band subset we will work with
@@ -121,8 +119,6 @@
     ibnd_indx(i) = band_subset(1)+i-1
   enddo
 
-  !call flush_unit( stdout )
-
   ! I think this shouldn't be allowed - I'm pretty sure that the optimal basis is not real-valued
   ! I'm not sure if this has been implemented everywhere.
   ! Check this in the future
@@ -137,15 +133,13 @@
   ! try to use ngk(ik) instead of npw from now on
   ! ======================================================================
   npwx = n_plane_waves (gcutw, nkstot, xk, g, ngm )
-!  !call sum_band
-  write(stdout,*) ' ecutwfc = ', ecutwfc
-  write(stdout,*) ' tpiba2 = ', tpiba2
+  write(stdout,*) '     ecutwfc = ', ecutwfc
+  write(stdout,*) '      tpiba2 = ', tpiba2
   write(stdout,*) ' nks, nkstot = ', nks, nkstot
-  write(stdout,*) ' xk = ', xk(1:3,1:nkstot)
-  write(stdout,*) '     npw = ', ngk(1:nks)
-  write(stdout,*) '    npwx = ', npwx
-  write(stdout,*) '     nkb = ', nkb
-
+  write(stdout,*) '          xk = ', xk(1:3,1:nkstot)
+  write(stdout,*) '         npw = ', ngk(1:nks)
+  write(stdout,*) '        npwx = ', npwx
+  write(stdout,*) '         nkb = ', nkb
 
   ! ======================================================================
   ! open files for output of Hamiltonian
@@ -201,7 +195,9 @@
   ! load basis functions
   write(stdout,*)
   write(stdout,*) ' load wave function'
-  CALL davcio( evc, 2*nwordwfc, iunwfc, 1, - 1 )
+  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, 1, exst )
+  CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
+  CALL close_buffer ( iunwfc, 'KEEP' )
 
   ! report norms
   allocate( norm(nbnd) )
@@ -217,19 +213,6 @@
   enddo
   deallocate( norm )
  
-!  ! I'm not sure if this is even necessary - it's just to be consistent
-!  IF ( qcutz > 0.D0 ) THEN
-!     !
-!     DO ig = 1, npw
-!        !
-!        g2kin(ig) = g2kin(ig) + qcutz * &
-!                    ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
-!        !
-!     END DO
-!     !
-!  END IF
-  !
-
   write(stdout,*)
   write(stdout,*) ' construct hamiltonian:'
   write(stdout,*)
@@ -331,8 +314,6 @@
         !
         ! ... product with the potential vrs = (vltot+v) on the smooth grid
         !
-        write(stdout,*) ' vrs = ', vrs(1:10,ispin)
-        !
         psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,ispin)
         !
         ! ... back to reciprocal space
@@ -367,8 +348,6 @@
   deallocate( ham, gtmp, stat=ierr )
   deallocate( ibnd_indx, jtmp )
 
-
-  !call flush_unit(stdout)
 
   ! just in case we have a local potential only
   ! then we have no need for projectors, overlaps, etc
@@ -472,12 +451,9 @@
         usq_atom(na)%matrix = 0.d0
       
         if( upf(nt)%tvanp ) then
-          write(*,*) 'usq_atom or qq for type ', nt
           do jh=1,nh(nt)
             do ih=1,nh(nt)
-              usq_atom(na)%matrix(ih,jh)=qq_at(ih,jh,nt)
-
-              write(*,*) ih, jh, nt, qq_at(ih,jh,nt)
+              usq_atom(na)%matrix(ih,jh)=qq_at(ih,jh,na)
             enddo
           enddo
         endif
@@ -487,19 +463,15 @@
     if( lda_plus_u ) then
       call update_atomic_proj_ldaU( natomwfc, nat, ntyp, ityp, Hubbard_lmax_, Hubbard_l_, Hubbard_U_, Hubbard_alpha_ )
 
-      write(stdout,*) ' natomproj = ', natomproj
       ! transfer the Hubbard potential atomic matrices
       do na=1,nat
         nt = ityp(na)
         IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN
-          write(*,*) 'vhU_atom or v ns for type ', nt
           DO ispin = 1, nspin
             allocate( vhU_atom(na,ispin)%matrix( 2*Hubbard_l(nt)+1, 2*Hubbard_l(nt)+1 ) ) 
             DO m2 = 1, 2 * Hubbard_l(nt) + 1
               DO m1 = 1, 2 * Hubbard_l(nt) + 1
                 vhU_atom(na,ispin)%matrix(m1,m2) = v%ns(m1,m2,ispin,na)
-
-                write(*,*) m1, m2, ispin, na, v%ns(m1,m2,ispin,na)
               ENDDO
             ENDDO
           ENDDO
@@ -510,19 +482,6 @@
         ENDIF
       enddo
     endif
-
-    ! ======================================================================
-    ! allocate space for projectors
-    ! ======================================================================
-    !allocate( becp(nkb,nbnd), stat=ierr )
-    !if( ierr/=0 ) then
-    !  call errore('hamq','problem allocating space for shirley non-local hamiltonian',1)
-    !endif
-!    write(stdout,*) 'allocating becp...'
-!    call allocate_bec_type( nkb, nbnd, becp )
-!    allocate( becp%k(nkb,nbnd) )
-!    write(stdout,*) becp%k(1,1), becp%k(nkb,nbnd)
-!    write(stdout,*) '...becp allocated'
 
     ! split over bands to reduce memory overhead for projectors
     call mp_scatter_size( nbnd, nbnd_l, root )
@@ -539,45 +498,30 @@
     call get_vnl_kgrid_cart( xk_cart )
     xk_cart = xk_cart / tpiba
 
+
     ! k-point loop for non-local potential
-    write(stdout,*) ' us information'
-    write(stdout,*) '          dq = ', dq
-    write(stdout,*) '      tab(1) = ', size(tab,1)
-    write(stdout,*) ' cell_factor = ', cell_factor
-    write(stdout,*) '     ecutwfc = ', ecutwfc
-    write(stdout,*) INT( (sqrt (ecutwfc) / dq + 4) * cell_factor )
-    write(stdout,*) '         npw = ', npw
 
     call allocate_bec_type( nkb, ceiling(dble(nbnd)/dble(nproc)), becp )
-    write(stdout,*) nproc, ' becp allocated with dims ', size(becp%k,1), size(becp%k,2)
 
     do ik=1,nkr
 
       write(stdout,*) ' load non-local potential for ik = ', ik
       write(stdout,'(x,a,3f12.5)') ' xk_cart = ', xk_cart(1:3,ik)
-      !call flush_unit(stdout)
 
-      ! CALL init_us_2( npw, igk_k(1,ik), xk_cart(1:3,ik), vkb )
       call init_us_2_shirley( npw, igk_k(1,1), xk_cart(1:3,ik), vkb )
-      write(stdout,*) 'init_us_2_shirley'
 
+      becp_l = zero
       ibnd=0
       do ip=1,nproc
         if( mpime==(ip-1) ) nbnd_ip=nbnd_l
         call mp_bcast( nbnd_ip, (ip-1), intra_pool_comm )
 
-!        write(stdout,*) ik, ip, nbnd_ip, band_subset(1)+ibnd
-!        call calbec( npw, vkb, evc(:,band_subset(1)+ibnd:band_subset(1)+ibnd+nbnd_ip), becp, nbnd_ip )
         CALL ZGEMM( 'C', 'N', nkb, nbnd_ip, npw, (1.0_DP,0.0_DP), &
            vkb, npwx, evc(1,band_subset(1)+ibnd), npwx, (0.0_DP,0.0_DP), becp%k, nkb )
         ! collect results at process ip-1
         call mp_root_sum( becp%k(:,1:nbnd_ip), becp_l, ip-1, world_comm )
-!        if( mpime==(ip-1) ) becp_l=becp%k(:,1:nbnd_l)
         ibnd=ibnd+nbnd_ip
       enddo
-
-      !CALL calbec( npw, vkb, evc(:,band_subset(1):band_subset(2)), becp, nbnd )
-      write(stdout,*) 'calbec'
 
       ! if we have a norm-conserving pseudopotential then a different convention
       ! has been adopted for the normalization of the projector |beta> 
@@ -585,7 +529,6 @@
       ! normalized version D|chi> where D is 1/<phi|dV|phi>
       ! This should have been fixed in the conversion to UPF format but it isn't
       !   ( note: becp(j,n) = <beta_j|nk> )
-      !call flush_unit(stdout)
       if( .not. all(upf(1:ntyp)%tvanp) ) then
         do na=1,nat
           nt=ityp(na)
@@ -611,7 +554,6 @@
     kzord=ksplord(3)
     write(stdout,*) ' set up splines with the following orders'
     write(stdout,*) kxord, kyord, kzord
-    !call flush_unit(stdout)
 
     call init_vnl_spline( kxord, kyord, kzord )
     write(stdout,*) 'init_vnl_spline'
@@ -670,30 +612,34 @@
 
     write(stdout,*) ' 8. atomic projections for LDA+U'
 
-    call allocate_bec_type( natomproj, nbnd, proj )
+    ! davegp
+    ALLOCATE( swfcatom( npwx*npol, natomwfc) )
+    !IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
+    !   ALLOCATE( wfcU(npwx*npol, nwfcU) )
+
+    write(stdout,*) '  natomwfc = ', natomwfc
+    write(stdout,*) ' natomproj = ', natomproj
+
+    call allocate_bec_type( natomproj, nbnd_l, proj )
     allocate( becp_l(natomproj,nbnd_l) )
     call resize_vnl( nkr, natomproj, nbnd_l )
 
     ! I need to reset the number of projectors for the dimensions of LDA+U
     ! if we want to use init_vnl_k and init_vnl_spline
     nproj = natomproj
-    ! the index mapping from becp or vkb to atoms and projections 
-! davegp - is this comment a bug? are the projectors for LDA+U in the right order/sized right?
-!    call update_atomic_proj( natomwfc, nat, ntyp, ityp, nhm, nh, nhtol, local_channel )
 
     ! make a temporary array for swfcatom
     allocate( swfcatom_ldaU(size(swfcatom,1),natomproj) )
-    write(stdout,*) ' allocating swfcatom_ldaU of size: ', size(swfcatom_ldaU,1), size(swfcatom_ldaU,2)
 
     do ik=1,nkr
 
       write(stdout,*) ' load Hubbard projections for ik = ', ik
       write(stdout,'(x,a,3f12.5)') ' xk_cart = ', xk_cart(1:3,ik)
-      !call flush_unit(stdout)
 
       call orthoatwfc_shirley( npw, igk_k(1,1), xk_cart(1:3,ik) )
 
-      ! reduce swfcatom to only those elements necessary for LDA+U
+      ! reduce swfcatom to only those elements necessary for LDA+U (i.e., with U neq 0)
+      ! should this be inside an ik loop? oh maybe yes because swfcatom is updated for each k
       ikb=0
       do na=1,nat
         nt=ityp(na)
@@ -702,33 +648,22 @@
             swfcatom_ldaU(:,ikb+m1) = swfcatom(:,oatwfc(na)+m1)
           enddo
           ikb=ikb + 2*Hubbard_l(nt)+1
-! davegp
-!          write(stdout,*) na, nt, Hubbard_l(nt), ikb
-! davegp
         endif
       enddo
-!      write(stdout,*) ' reducing swfcatom ', ikb, natomproj, size(swfcatom,2)
-!      if(ik==1) write(555,'(2f12.6)') swfcatom_ldaU
 
-! davegp - distribute the computation of the projections in the eigenbasis (like for vkb above)
+      ! distribute the computation of the projections in the eigenbasis (like for vkb above)
+      becp_l = zero
       ibnd=0
       do ip=1,nproc
         if( mpime==(ip-1) ) nbnd_ip=nbnd_l
         call mp_bcast( nbnd_ip, (ip-1), intra_pool_comm )
 
-!        write(stdout,*) ik, ip, nbnd_ip, band_subset(1)+ibnd
-!        call calbec( npw, vkb, evc(:,band_subset(1)+ibnd:band_subset(1)+ibnd+nbnd_ip), becp, nbnd_ip )
         CALL ZGEMM( 'C', 'N', ikb, nbnd_ip, npw, (1.0_DP,0.0_DP), &
            swfcatom_ldaU, npwx, evc(1,band_subset(1)+ibnd), npwx, (0.0_DP,0.0_DP), proj%k, ikb )
         ! collect results at process ip-1
         call mp_root_sum( proj%k(:,1:nbnd_ip), becp_l, ip-1, world_comm )
-!        if( mpime==(ip-1) ) becp_l=becp%k(:,1:nbnd_l)
         ibnd=ibnd+nbnd_ip
       enddo
-
-      !CALL calbec( npw, swfcatom_ldaU, evc(:,band_subset(1):band_subset(2)), proj )
-
-      !call mp_scatter( proj%k, becp_l, root )
 
       ! store the projectors for this k-point
       call init_vnl_k( natomproj, nbnd_l, ik, becp_l )
@@ -741,7 +676,6 @@
     kzord=ksplord(3)
     write(stdout,*) ' set up splines with the following orders'
     write(stdout,*) kxord, kyord, kzord
-    !call flush_unit(stdout)
 
     call init_vnl_spline( kxord, kyord, kzord )
 
@@ -752,6 +686,8 @@
     deallocate( becp_l )
     call deallocate_bec_type( proj )
     
+    deallocate( swfcatom )
+
   endif  ! if lda_plus_u
 
 

@@ -45,15 +45,10 @@
     nbasis = nkpt*nbnd
 
     ! initialize scalapack
-    write(stdout,*) ' scalapack_init'
     call scalapack_init
-    write(stdout,*) ' scalapack_init', nprocs, nprow, npcol, myrow, mycol
 
     ! distribute using scalapack
-    write(stdout,*) ' scalapack_distrib'
     call scalapack_distrib( nbasis, nbasis, nbasis_lr, nbasis_lc )
-    write(stdout,*) ' allocating local part of overlap matrix '
-    write(stdout,*) nbasis_lr, ' x ', nbasis_lc
     allocate( Sij(nbasis), &
               S_l(nbasis_lr, nbasis_lc), &
               B_l(nbasis_lr, nbasis_lc), &
@@ -115,9 +110,7 @@
     do jk=1,nkpt
       call read_shirley_wfc_1( jk )
       do ik=1,jk
-        write(stdout,*) 'overlap of ', ik, jk
         call read_shirley_wfc_2( ik )
-        write(stdout,*) ' kpt pair ', ik, jk
         call overlap_shirley_wfc( Smat )
     ! sum contributions from all processors
 #ifdef __MPI
@@ -228,7 +221,6 @@
 
     write(stdout,*) ' diagonalize overlap'
 
-    write(stdout,*) ' scalapack_diag'
     call scalapack_diag( nbasis, S_l, eigU, B_l )
 
     end subroutine diagonalize_overlap

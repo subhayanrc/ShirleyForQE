@@ -1,6 +1,5 @@
   program xas_para
 
-!#include "f_defs.h"
   use parallel_include
   USE io_global,  ONLY : stdout, ionode, ionode_id
   use mp_world, only : nproc, mpime, world_comm, mp_world_end

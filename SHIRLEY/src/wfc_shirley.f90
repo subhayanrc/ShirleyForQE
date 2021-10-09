@@ -203,42 +203,48 @@
   !
   ! update all fft information based on the new cut-off ecutwfc_gamma
   !
-  use gvecw,                  only : gcutw, ecutwfc
-  use gvect
-  !use fft_types,              only : realspace_grids_init
-  use gvecs,                  only : dual, doublegrid, gcutms, ngms
   use recvec_subs,            only : ggen, ggens
-  use cell_base,              only : tpiba2, at, bg
   use control_flags,          only : gamma_only, smallmem
   use fft_base,               only : dffts, dfftp
   use io_global, only : stdout
   USE scf,       ONLY : rho
-
-
+  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
+  USE fft_types,            ONLY : fft_type_allocate, fft_type_deallocate
+  USE constants, ONLY : pi, eps8
+  USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg
+  use gvect
+  USE gvecs,     ONLY : gcutms, dual, doublegrid, ngms
+  USE gvecw,     ONLY : gcutw, ecutwfc
   !
   ! deallocate space used for FFT's and g-vectors
   !
   call deallocate_fft
+  call deallocate_gvect
+  !
+  !
+  ! ... Set the units in real and reciprocal space
+  !
+  tpiba  = 2.D0 * pi / alat
+  tpiba2 = tpiba**2
   !
   ! ... Compute the cut-off of the G vectors
   !
-  gcutm = dual * gcutw
+  gcutw =        ecutwfc / tpiba2
+  gcutm = dual * ecutwfc / tpiba2
+  ecutrho=dual * ecutwfc
   !
-  doublegrid = ( dual > 4.D0 )
-  !
+  doublegrid = ( dual > 4.0_dp + eps8 )
   IF ( doublegrid ) THEN
-     !
-     gcutms = 4.D0 * gcutw
-     !
+     gcutms = 4.D0 * ecutwfc / tpiba2
   ELSE
-     !
      gcutms = gcutm
-     !
   END IF
   !
-  ! ... calculate dimensions of the FFT grid
+  call fft_type_deallocate( dfftp )
+  call fft_type_deallocate( dffts )
   !
-  !call realspace_grids_init( at, bg, gcutm, gcutms )
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
   !
   ! ... determine the data structure for fft arrays
   !
@@ -267,16 +273,6 @@
      ! ... Solvers need to know gstart
      call export_gstart_2_solvers(gstart)
   END IF
-  !!
-  !! ... allocate memory for G- and R-space fft arrays
-  !!
-  !call allocate_fft
-  !rho%of_g = 0.d0
-  !rho%of_r = 0.d0
-  !!
-  !! ... generate reciprocal-lattice vectors and fft indices
-  !!
-  !call ggen ( gamma_only, at, bg )
   !
   call summary
   !
@@ -617,9 +613,9 @@
   do ik=1,nkstot_orig
     
     write(stdout,'(a,i6,a,3f8.3)') ' for original k-point ', ik, ' = ', xk_orig(1:3,ik)
-!    if( debug ) then
+    if( debug ) then
       write(stdout,*) '    loading wave functions from file unit ', iunwfc
-!   endif
+    endif
 
     ! load wave functions for ik
     call davcio( evc_tmp, 2*nwordwfc, iunwfc, ik, -1 )
@@ -632,7 +628,6 @@
       ikmapped=ikmapped+1
 
       ! determine igk and igk_l2g
-      write(stdout,*) '   mapped k-point ', ikmapped
       CALL gk_sort (xk(1,ikmapped), ngm, g, gcutw, npw, igk_k(1,ikmapped), g2kin)
       call gk_l2gmap (ngm, ig_l2g(1), npw, igk_k(1,ikmapped), igk_l2g(1,ikmapped))
       ngk(ikmapped)=npw
@@ -653,7 +648,6 @@
       expikr(:)= exp( ( - iota * tpi ) * expikr(:) )
 
 
-
       ! loop over bands to map and re-order wave function coefficients
       do ibnd=1,nbnd_subset
         !
@@ -664,8 +658,6 @@
 
         ! re-order based on new g-vector ordering with larger inclusive cut-off
         ! zero the temp array
-        !if( debug ) write(stdout,*) ' reorder original k-point ', ik, ' band ', jbnd
-        write(stdout,*) ' reorder original k-point ', ik, ' band ', jbnd
         wtmp = zero
 
         ! merge wave function from evc into wtmp
@@ -703,13 +695,6 @@
         ! now FFT
         psic(:) = ( 0.0D0, 0.0D0 )
         psic(dffts%nl(igk_k(1:npw,ikmapped))) = evc1(1:npw)
-
-!        if( debug ) then
-!          ! check norm
-!          norm = ZDOTC( ngk_orig(ik), evc_tmp(1,jbnd), 1, evc_tmp(1,jbnd), 1 )
-!          call mp_sum(norm, intra_pool_comm)
-!          write(stdout,*) ' mapping ', ikmapped, jbnd, norm
-!        endif
 
         CALL start_clock( 'firstfft' )
         !
@@ -779,8 +764,6 @@
         !
         ! re-order as for Gamma-point with larger inclusive cut-off
         ! zero the temp array
-        !if( debug ) write(stdout,*) ' reorder mapped k-point ', ikmapped, ' band ', ibnd
-        write(stdout,*) ' reorder mapped k-point ', ikmapped, ' band ', ibnd
         wtmp = zero
 
         ! merge wave function from evc into wtmp

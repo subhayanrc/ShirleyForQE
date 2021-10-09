@@ -23,7 +23,7 @@ PSEUDO_LIST="O.LDA.US.RRKJ3.UPF Fe.pz-nd-rrkjus.UPF"
 
 # hack to fix pseudo directory
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-SCRIPT_DIR="$BIN_DIR/../scripts"
+SCRIPT_DIR="$EXAMPLE_DIR/../../scripts"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -289,8 +289,6 @@ KPT_QDIAG=" K_POINTS
 shirley_qdiag "$PREFIX" "$TMP_DIR" "$KPT_QDIAG" "$SHIRLEYQDIAG"
 $BANDSTRUCT $PREFIX.qdiag.dump
 
-exit
-
 echo "==== NSCF check ===="
 KPTS=" K_POINTS tpiba
   21
@@ -321,6 +319,55 @@ if [ -e CRASH ] ; then exit ; fi
 echo "==== checking eigenvalue differences ===="
 $SCRIPT_DIR/pwbands.pl < $PREFIX.nscf.out > $PREFIX.nscf.eig
 $SCRIPT_DIR/diff_eigvals.pl $PREFIX.nscf.eig 5 $PREFIX.qdiag.dump.bandstruct 5 
+
+cat >> $PREFIX.qdiag.dump.gnuplot << EOF
+replot '$PREFIX.nscf.eig' u 5:(\$6-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$7-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$8-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$9-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$10-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$11-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$12-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$13-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$14-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$15-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$16-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$17-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$18-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$19-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$20-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$21-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$22-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$23-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$24-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$25-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$26-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$27-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$28-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$29-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$30-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$31-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$32-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$33-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$34-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$35-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$36-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$37-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$38-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$39-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$40-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$41-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$42-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$43-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$44-efermi) w p pt 6 ps 1 lc 3 \\
+, '' u 5:(\$45-efermi) w p pt 6 ps 1 lc 3 
+set output '$PREFIX.png'
+set term png
+replot
+EOF
+
+gnuplot $PREFIX.qdiag.dump.gnuplot
+open $PREFIX.png
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

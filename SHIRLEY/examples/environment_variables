@@ -19,7 +19,7 @@
 PREFIX=`cd ../../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
-TMP_DIR=$HOME/tmp
+TMP_DIR=./
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
 # add the appropriate commands (poe, mpirun, mpprun...) and/or options

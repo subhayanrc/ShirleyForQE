@@ -400,10 +400,6 @@
     endif
     call mp_barrier( world_comm )
   enddo
-  if( mpime==0 ) then
-    write(stdout,*)
-    call flush(6)
-  endif
   call mp_barrier( world_comm )
 
   end subroutine create_striped_desc
@@ -461,22 +457,14 @@
     write(stdout,*) ' memory distribution of projectors (by nbasis)'
     write(stdout,'(2x,6a18)') 'mpime', 'mypool', 'mypoolid', &
                   'n', 'nr', 'nc'
-    call flush(6)
   endif
-  call mp_barrier( world_comm )
   do id=0,nproc-1
     if( mpime == id ) then
       write(stdout,'(2x,6i18)') mpime, mypool, mypoolid, &
                            n, nr, nc
-      call flush(6)
     endif
     call mp_barrier( world_comm )
   enddo
-  if( mpime==0 ) then
-    write(stdout,*)
-    call flush(6)
-  endif
-  call mp_barrier( world_comm )
 
   end subroutine create_striped_desc2
 
@@ -698,7 +686,7 @@
   integer :: it, ip, ip_global, np, np_global, nproj_type_max
   integer :: p_size, id, p_size1, tag
 
-  if( mpime==0 ) write(stdout,*) ' read_pool_projs '
+  !if( mpime==0 ) write(stdout,*) ' read_pool_projs '
 
   if( mypoolid == mypoolroot ) then
     allocate( proj_tmp(size(proj,1),nproj_global,size(proj,3)) )
@@ -711,7 +699,7 @@
   if( mpime==root ) read(unit) proj_tmp
   if( mypoolid == mypoolroot ) call mp_bcast( proj_tmp, root, cross_pool_comm )
 
-  if( mpime==0 ) write(stdout,*) ' root -> mypoolroot '
+  !if( mpime==0 ) write(stdout,*) ' root -> mypoolroot '
 
   ! redistribute within pool
   ip=0
@@ -893,8 +881,8 @@
   enddo
 #ifdef __SHIRLEY_DEBUG
   ! print *, " mypoolid = ", mypoolid, " index_atom_global = ", index_atom_global(1 : natom), " type_atom = ", type_atom(1 : natom)
-  write(stdout, *) " nproj_global = ", nproj_global
-  print *, " mypoolid = ", mypoolid, " nproj_offset = ", nproj_offset
+  !write(stdout, *) " nproj_global = ", nproj_global
+  !print *, " mypoolid = ", mypoolid, " nproj_offset = ", nproj_offset
 #endif
   index_betaq=0
   index_nlproj_betaq=0
@@ -952,23 +940,15 @@
     write(stdout,'(2x,9a18)') 'mpime', 'mypool', 'mypoolid', &
                   'natom_global', 'natom', 'nproj_global', 'nproj', &
                   'nproj_nl_global', 'nproj_nl'
-    call flush(6)
   endif
-  call mp_barrier( world_comm )
   do id=0,nproc-1
     if( mpime == id ) then
       write(stdout,'(2x,9i18)') mpime, mypool, mypoolid, &
                            natom_global, natom, nproj_global, nproj, &
                            nproj_nl_global, nproj_nl
-      call flush(6)
     endif
     call mp_barrier( world_comm )
   enddo
-  if( mpime==0 ) then
-    write(stdout,*)
-    call flush(6)
-  endif
-  call mp_barrier( world_comm )
 
   end subroutine distrib_projs_byatom
 
@@ -1086,10 +1066,10 @@
   !endif
   call errore('diag_pool_matrix_divide_and_conquer','unable to allocate workspace',abs(info))
 
-  if( mpime==root ) write(stdout,*) ' pzheevd diag'
+  !if( mpime==root ) write(stdout,*) ' pzheevd diag'
   call pzheevd( 'V', 'U', n, a, 1, 1, desc_cyclic, eig, z, 1, 1, desc_cyclic, &
                 work, lwork, rwork, lrwork, iwork, liwork, info )
-  if( mpime==root ) write(stdout,*) ' pzheevd done'
+  !if( mpime==root ) write(stdout,*) ' pzheevd done'
 
   deallocate( work, rwork, iwork )
 
@@ -1212,13 +1192,13 @@
     allocate( work(lwork), rwork(max(3,lrwork)), iwork(liwork), stat=info )
     call errore('diag_pool_matrix_generalized_expert','unable to allocate workspace',abs(info))
 
-    if( mpime==root ) write(stdout,*) ' pzhegvx diag'
+    !if( mpime==root ) write(stdout,*) ' pzhegvx diag'
     call PZHEGVX( 1, 'V', eigval_range, 'U', n, a, 1, 1, &
                   desc_cyclic, b, 1, 1, desc_cyclic, vl, vu, il, iu, &
                   abstol, n_found, nv_found, eig, orfac, z, 1, 1, desc_cyclic, &
                   work, lwork, rwork, lrwork, iwork, liwork, &
                   ifail, icluster, gap, info )
-    if( mpime==root ) write(stdout,*) ' pzhegvx done'
+    !if( mpime==root ) write(stdout,*) ' pzhegvx done'
 
     deallocate( work, rwork, iwork )
 

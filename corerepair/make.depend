@@ -1,7 +1,11 @@
+addlocalproj_upf.o : ../Modules/environment.o
 addlocalproj_upf.o : ../Modules/funct.o
+addlocalproj_upf.o : ../Modules/io_global.o
+addlocalproj_upf.o : ../Modules/mp_global.o
 addlocalproj_upf.o : ../Modules/pseudo_types.o
+addlocalproj_upf.o : ../Modules/radial_grids.o
 addlocalproj_upf.o : ../Modules/upf.o
-addlocalproj_upf.o : ../Modules/write_upf.o
+addlocalproj_upf.o : ../upftools/write_upf.o
 atomic_waves.o : ../Modules/kind.o
 corevalence_position.o : ../Modules/kind.o
 corevalence_position.o : atomic_waves.o

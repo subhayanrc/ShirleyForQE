@@ -160,6 +160,7 @@
                         npool, mypool, context_global
   use mp, only : mp_sum, mp_max, mp_barrier, mp_bcast
   use mp_world, only : mpime, root
+  use io_global, only : stdout
 
   complex(dp),parameter :: ONE=(1.d0,0.d0)
   complex(dp),parameter :: ZERO=(0.d0,0.d0)
@@ -185,7 +186,7 @@
   integer :: nstripe, istripe
   integer :: ioffset
 
-  if( mpime==root ) write(*,*) ' building Hamiltonian'
+  !if( mpime==root ) write(stdout,*) ' building Hamiltonian'
 
   ! build the Hamiltonian for this k-point
   ! local contribution
@@ -283,8 +284,6 @@
       rdest=iproc
       cdest=0
 
-      !write(mpime+100,*) context_striped, nbasis_stripe_max, nbasis, size(nlham,1), size(nlham,2), rdest, cdest 
-
       call ZGSUM2D(context_striped,'A',' ',nbasis_stripe_max,nbasis, &
                    nlham,nbasis_stripe_max,rdest,cdest)
 !      call mp_sum( nlham, intra_pool_comm )
@@ -339,9 +338,7 @@
 
       vatomq=ZERO
 
-! davegp
       ioffset=0
-! davegp
 
       do iatom=1,natom
         it = type_atom(iatom)
@@ -351,35 +348,18 @@
 
           if( np > 0 ) then
 
-! davegp
-!            forall( i=1:np, j=1:nbasis ) &
-!              atom_block(i,j) = &
-!                atomq(index_ldaUq(i,iatom),j)
             forall( i=1:np, j=1:nbasis ) &
               atom_block(i,j) = &
                 atomq(ioffset+i,j)
-! davegp
 
             forall( i=1:np, j=1:np ) &
               vhU(i,j) = cmplx( vhU_atom(iatom,ispin)%matrix(i,j) )
 
-! davegp - maybe check on vhU for each atom and the indexing index_ldaUq
-!            write(444,*) iatom, it, np
-!            write(444,*) index_ldaUq(1:np,iatom)
-!            write(444,'(2f12.6)') vhU(1:np,1:np)
-! davegp
-
-! davegp
-!            CALL ZGEMM( 'N', 'N', np, nbasis, np, ONE, &
-!                        vhU, (2*Hubbard_lmax+1), &
-!                        atom_block, (2*Hubbard_lmax+1), &
-!                        ZERO, vatomq(index_ldaUq(1,iatom),1), natomproj )
             CALL ZGEMM( 'N', 'N', np, nbasis, np, ONE, &
                         vhU, (2*Hubbard_lmax+1), &
                         atom_block, (2*Hubbard_lmax+1), &
                         ZERO, vatomq(ioffset+1,1), natomproj )
             ioffset=ioffset+np
-! davegp
           endif ! np > 0
         endif ! U,alpha/=0
       enddo ! loop over atoms
@@ -420,7 +400,6 @@
         cdest=0
         call ZGSUM2D(context_striped,'A',' ',nbasis_stripe_max,nbasis, &
                      nlham,nbasis_stripe_max,rdest,cdest)
-!        call mp_sum( nlham, intra_pool_comm )
 
         ! add to correct sized array
         if( mypoolid==iproc) then
@@ -437,7 +416,6 @@
 
     endif ! lda_plus_u
 
-
     ! non-local Hamiltonian computed
 
     ! re-use the array nlham to redistribute the non-local hamiltonian
@@ -447,7 +425,7 @@
 
     if( nproc_per_pool > 1 ) then
 
-      if( mpime==root ) write(*,*) ' redistribute non-local Hamiltonian'
+      if( mpime==root ) write(stdout,*) ' redistribute non-local Hamiltonian'
       ! by now every process has its own stripe of the non-local hamiltonian
       ! we need to redistribute this data in a block-cyclic fashion
       call PZGEMR2D(nbasis,nbasis, &
@@ -459,14 +437,6 @@
       nlham = nlham_s
 
     endif
-
-! davegp
-! debugging to find wierd LDA+U error
-!    write(666,*) nbasis
-!    write(666,'(20f12.6)') eigvec
-!    write(667,*) nbasis
-!    write(667,'(20f12.6)') nlham
-! davegp
 
     eigvec = eigvec + nlham
     deallocate( nlham )
@@ -491,21 +461,15 @@
           smatrix(diag_cyclic(1,i),diag_cyclic(2,i)) &
             = smatrix(diag_cyclic(1,i),diag_cyclic(2,i)) + ONE
 
-! davegp
-! debugging to find wierd LDA+U error
-!    write(668,*) nbasis
-!    write(668,'(20f12.6)') smatrix
-! davegp
-
     endif
 
     deallocate( nlham_s, smatrix_s )
 
-    if( mpime==root ) write(*,*) ' done with nonlocal '
+    !if( mpime==root ) write(stdout,*) ' done with nonlocal '
 
   endif ! if nproj > 0
 
-  if( mpime==root ) write(*,*) ' done building Hamiltonian'
+  !if( mpime==root ) write(stdout,*) ' done building Hamiltonian'
   return
   end subroutine diag_build_hamk
 
@@ -874,6 +838,7 @@
   use mp_world, only : mpime
   use hamq_shirley, only : ncpp, nbasis
   use hamq_pool, only : nproc_per_pool, diag_pool_matrix
+  use io_global, only : stdout
 
   integer :: ierr
   real(dp) :: vl, vu, abstol

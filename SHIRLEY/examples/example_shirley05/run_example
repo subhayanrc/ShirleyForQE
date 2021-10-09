@@ -276,22 +276,22 @@ BANDSTRUCT="$BIN_DIR/bandstruct.x"
 echo "==== SCF ===="
 KPTS=" K_POINTS automatic
   1 1 1 0 0 0"
-#scf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW"
+scf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW"
 if [ -e CRASH ] ; then exit ; fi
 
 echo "==== NSCF ===="
 NBND_NSCF=96
 KPTS=" K_POINTS automatic
   1 1 1 0 0 0"
-#nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
+nscf_calc "$PREFIX" "$TMP_DIR" "$KPTS" "$PW" $NBND_NSCF
 if [ -e CRASH ] ; then exit ; fi
 
 echo "==== SHIRLEY_BASIS ===="
-#shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
+shirley_basis "$PREFIX" "$TMP_DIR" "$SHIRLEYBASIS"
 
 echo "==== SHIRLEY_HAM ===="
 KPT_HAM=" 2 2 2 0 0 0"
-#shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
+shirley_ham "$PREFIX" "$TMP_DIR" "$KPT_HAM" "$SHIRLEYHAM"
 
 echo "==== SHIRLEY_QDIAG ===="
 KPT_QDIAG=" K_POINTS

@@ -16,7 +16,6 @@ PROGRAM shirley_ham
   ! of electronic wave functions using as basis set an input set of
   ! basis functions which should span this space optimally.
 
-!#include "f_defs.h" 
   USE parameters, ONLY : ntypx, npk, lmaxx
   USE io_global,  ONLY : stdout, ionode
   USE kinds,      ONLY : DP 
@@ -82,19 +81,15 @@ PROGRAM shirley_ham
   ! ======================================================================
   !   Now allocate space for pwscf variables, read and check them. 
   ! ======================================================================
-  call read_file()
+  call read_file_shirley( nspin_ham )
 
-  call wfcinit()
-
-  !call read_file_shirley( nspin_ham )
-  !call openfil
+  ! important for access to some files that are needed by LDA+U
+  call openfil
 
 
   if( nkstot /= 1 ) then
     call errore('shirley_ham','number of k-points should be 1',abs(nkstot))
   endif
-
-  ! I might need to adjust spin here?
 
   select case (trim(calculation))
 !  case( 'elphmtxel' )
@@ -203,36 +198,19 @@ PROGRAM shirley_ham
     ! ======================================================================
     ! Initialize the Hamiltonian from PWSCF
     ! ======================================================================
-    ! Should I turn on spin here? Or before this select block?
-    !CALL hinit0()
-    CALL potinit()
-    !CALL newd()
-
-!    ! are these guys spin-dependent?
-!    write(stdout,*) ' dvan: '
-!    write(stdout,'(i6,e12.5)') (ios, dvan(ios,ios,1), ios=1,nh(1))
-!
-!    write(stdout,*) ' qq: '
-!    write(stdout,'(i6,e12.5)') (ios, qq(ios,ios,1), ios=1,nh(1))
-!
-!    do ispin=1,nspin
-!      write(stdout,*) ' spin ', ispin
-!      write(stdout,*) ' deeq: '
-!      write(stdout,'(i6,e12.5)') (ios, deeq(ios,ios,1,ispin), ios=1,nh(1))
-!    enddo
+    call potinit()
 
     ! ======================================================================
     ! Update pseudopotentials
     ! ======================================================================
     if( updatepp ) then
       call update_pseudo( nspecies, pseudo_dir, pseudo_file )
-!      write(stdout,*) ' updated deeq: '
-!      write(stdout,'(i6,e12.5)') (ios, deeq(ios,ios,1,1), ios=1,nh(1))
     else
       ! no specific local-channel - but the array must be allocated anyway
       allocate( local_channel(ntyp) )
       local_channel = -1 ! this is the do-nothing default value
     endif
+
     ! ======================================================================
     ! make the shirley hamiltonian
     ! ======================================================================

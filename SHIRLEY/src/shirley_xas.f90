@@ -6,7 +6,6 @@ program shirley_xas
 
   ! David Prendergast, UCB, Jul 2007
 
-!#include "f_defs.h"
   use kinds, only : dp
   use parallel_include
   use hamq_shirley

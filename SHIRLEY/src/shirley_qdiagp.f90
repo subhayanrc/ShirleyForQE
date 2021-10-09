@@ -7,7 +7,6 @@
   ! David Prendergast, UCB, Nov 2007
 
   ! now parallelized
-!#include "f_defs.h"
   use kinds, only : dp
   use parallel_include
   use hamq_shirley
@@ -81,8 +80,7 @@
   nbasis_subset = band_subset(2)-band_subset(1)+1
   write(stdout,*) ' band_subset = ', band_subset
 
-!  call diagx_init( band_subset(1), band_subset(2) )
-  call diag_init
+  call diagx_init( band_subset(1), band_subset(2) )
 
   call dump_system( nelec_, alat, volume, at, bg, tpiba, nspin, lda_plus_u )
   write(stdout,*) ' nspin = ', nspin
@@ -191,8 +189,7 @@
       deallocate( ztmp )
     else
 
-!    call diagx_ham
-      call diag_ham
+    call diagx_ham
 
     endif
 
