@@ -7,8 +7,7 @@ MODFLAGS = $(BASEMOD_FLAGS) \
            $(MOD_FLAG)../../PW/src \
            $(MOD_FLAG)../../FFTXlib
 
-QEMODS=../../Modules/libqemod.a \
-       ../../PW/src/libpw.a \
+QEMODS=../../PW/src/libpw.a ../../Modules/libqemod.a \
        ../../KS_Solvers/libks_solvers.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a \
        ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
@@ -493,44 +492,44 @@ $(XAS_PARA_EXE) \
 #	       $(WRITETEST) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 #	- ( cd ../bin ; $(COPY) ../SHIRLEY/$@ . )
 
-$(SHIRLEY_BASIS_EXE) : $(SHIRLEY_BASIS) $(LIBOBJS) $(QEMODS)
+$(SHIRLEY_BASIS_EXE) : $(SHIRLEY_BASIS) $(QEMODS) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(SHIRLEY_BASIS) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(SHIRLEY_BASIS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(SHIRLEY_HAM_EXE) : $(SHIRLEY_HAM) $(LIBOBJS) $(QEMODS)
+$(SHIRLEY_HAM_EXE) : $(SHIRLEY_HAM) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(SHIRLEY_HAM) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(SHIRLEY_HAM) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(SHIRLEY_QDIAGP_EXE) : $(SHIRLEY_QDIAGP) $(LIBOBJS) $(QEMODS)
+$(SHIRLEY_QDIAGP_EXE) : $(SHIRLEY_QDIAGP) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(SHIRLEY_QDIAGP) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(SHIRLEY_QDIAGP) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(BANDSTRUCT_EXE) : $(BANDSTRUCT) $(LIBOBJS) $(QEMODS)
+$(BANDSTRUCT_EXE) : $(BANDSTRUCT) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(BANDSTRUCT) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(BANDSTRUCT) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(SHIRLEY_XAS_EXE) : $(SHIRLEY_XAS) $(LIBOBJS) $(QEMODS)
+$(SHIRLEY_XAS_EXE) : $(SHIRLEY_XAS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(SHIRLEY_XAS) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(SHIRLEY_XAS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(XAS_PARA_EXE) : $(XAS_PARA) $(LIBOBJS) $(QEMODS)
+$(XAS_PARA_EXE) : $(XAS_PARA) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(XAS_PARA) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(XAS_PARA) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(EFERMI_EXE) : $(EFERMI) $(LIBOBJS) $(QEMODS)
+$(EFERMI_EXE) : $(EFERMI) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(EFERMI) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(EFERMI) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
-$(SHIRLEY_OVERLAP_EXE) : $(SHIRLEY_OVERLAP) $(LIBOBJS) $(QEMODS)
+$(SHIRLEY_OVERLAP_EXE) : $(SHIRLEY_OVERLAP) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	       $(SHIRLEY_OVERLAP) $(LIBOBJS) $(QEMODS) $(QELIBS)
+	       $(SHIRLEY_OVERLAP) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 tldeps:
