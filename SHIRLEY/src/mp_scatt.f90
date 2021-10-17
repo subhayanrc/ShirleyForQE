@@ -241,6 +241,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
                        lengths, 1, MPI_INTEGER, &
@@ -257,9 +259,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour
@@ -294,6 +294,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
                        lengths, 1, MPI_INTEGER, &
@@ -310,9 +312,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour
@@ -346,6 +346,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
                        lengths, 1, MPI_INTEGER, &
@@ -362,9 +364,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour
@@ -399,6 +399,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
                        lengths, 1, MPI_INTEGER, &
@@ -415,9 +417,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour
@@ -452,6 +452,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
                        lengths, 1, MPI_INTEGER, &
@@ -468,9 +470,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour
@@ -504,6 +504,8 @@
 
       if( taskid == root ) then
         allocate( lengths(numtask), displs(numtask) )
+      else
+        allocate( lengths(1), displs(1) )
       endif
  
       call mpi_gather( size(msg_dest), 1, MPI_INTEGER, &
@@ -523,9 +525,7 @@
                          root, group, ierr )
       if( ierr/=0 ) call mp_stop(8403)
 
-      if( taskid == root ) then
-        deallocate( lengths, displs )
-      endif
+      deallocate( lengths, displs )
 # else
       msglen = SIZE(msg_dest)
       msg_dest = msg_sour

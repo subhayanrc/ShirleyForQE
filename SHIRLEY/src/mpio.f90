@@ -117,6 +117,8 @@
 
   if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
+  else
+    allocate( lengths(1), displs(1) )
   endif
   call mpi_gather( size(msg), 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
@@ -137,9 +139,7 @@
   ! here we convert between different kinds of integer
   offset=i
   call mp_bcast( fposn, root, group )
-  if( taskid == root ) then
-    deallocate( lengths, displs )
-  endif
+  deallocate( lengths, displs )
 
   call mpi_file_write_at( fhandle, offset, &
                           msg, msglen, &
@@ -179,6 +179,8 @@
 
   if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
+  else
+    allocate( lengths(1), displs(1) )
   endif
   call mpi_gather( size(msg), 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
@@ -199,9 +201,7 @@
   ! here we convert between different kinds of integer
   offset=i
   call mp_bcast( fposn, root, group )
-  if( taskid == root ) then
-    deallocate( lengths, displs )
-  endif
+  deallocate( lengths, displs )
 
   call mpi_file_write_at( fhandle, offset, &
                           msg, msglen, &
@@ -241,6 +241,8 @@
 
   if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
+  else
+    allocate( lengths(1), displs(1) )
   endif
   call mpi_gather( msglen, 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
@@ -261,9 +263,7 @@
   call mp_bcast( fposn, root, group )
   ! here we convert between different kinds of integer
   offset=i
-  if( taskid == root ) then
-    deallocate( lengths, displs )
-  endif
+  deallocate( lengths, displs )
 
   call mpi_file_write_at( fhandle, offset, &
                           msg, msglen, &
@@ -303,6 +303,8 @@
 
   if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
+  else
+    allocate( lengths(1), displs(1) )
   endif
   call mpi_gather( msglen, 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
@@ -323,9 +325,7 @@
   call mp_bcast( fposn, root, group )
   ! here we convert between different kinds of integer
   offset=i
-  if( taskid == root ) then
-    deallocate( lengths, displs )
-  endif
+  deallocate( lengths, displs )
 
   call mpi_file_write_at( fhandle, offset, &
                           msg, msglen, &
@@ -363,9 +363,11 @@
   call mpi_comm_rank(group,taskid,ierr)
   if( ierr/=0 ) call mp_stop(8401)
 
-  !if( taskid == root ) then
+  if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
-  !endif
+  else
+    allocate( lengths(1), displs(1) )
+  endif
   call mpi_gather( msglen, 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
                    root, group, ierr )
@@ -385,9 +387,7 @@
   call mp_bcast( fposn, root, group )
   ! here we convert between different kinds of integer
   offset=i
-  !if( taskid == root ) then
-    deallocate( lengths, displs )
-  !endif
+  deallocate( lengths, displs )
 
   call mpi_file_read_at( fhandle, offset, &
                          msg, msglen, &
@@ -425,9 +425,11 @@
   call mpi_comm_rank(group,taskid,ierr)
   if( ierr/=0 ) call mp_stop(8401)
 
-  !if( taskid == root ) then
+  if( taskid == root ) then
     allocate( lengths(numtask), displs(numtask) )
-  !endif
+  else
+    allocate( lengths(1), displs(1) )
+  endif
   call mpi_gather( msglen, 1, MPI_INTEGER, &
                    lengths, 1, MPI_INTEGER, &
                    root, group, ierr )
@@ -447,9 +449,7 @@
   call mp_bcast( fposn, root, group )
   ! here we convert between different kinds of integer
   offset=i
-  !if( taskid == root ) then
-    deallocate( lengths, displs )
-  !endif
+  deallocate( lengths, displs )
 
   call mpi_file_read_at( fhandle, offset, &
                          msg, msglen, &

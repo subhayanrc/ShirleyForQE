@@ -121,7 +121,7 @@ SUBROUTINE reallocate_nlpot
   ! coming from cell contraction during variable cell relaxation/MD)
   ! davegp - added tpiba to include q+G length - could be more rigorous
   !
-  nqx = int( ((sqrt (ecutwfc) + tpiba*2.d0) / dq + 4) * cell_factor )
+  nqx = int( ((sqrt (ecutwfc) + tpiba*3.d0) / dq + 4) * cell_factor )
 
   if( allocated(tab) ) deallocate(tab)
   if( allocated(tab_d2y) ) deallocate(tab_d2y)

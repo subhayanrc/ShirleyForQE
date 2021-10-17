@@ -84,6 +84,7 @@
   complex(dp),allocatable :: jtmp(:)
   real(dp),allocatable :: gtmp(:)
   real(dp) :: qvec(3), tqvec(3)
+  real(dp) :: atp(3,3), bgp(3,3)
   integer :: iunhq, iunvnl, igwx
   logical :: exst
 
@@ -179,7 +180,10 @@
  
 
   ! set up transformation matrices from crystal to Cartesian and back
-  call init_qtrans( transpose(at)/tpiba, bg*tpiba )
+  atp=transpose(at)/tpiba
+  bgp=bg*tpiba
+  !call init_qtrans( transpose(at)/tpiba, bg*tpiba )
+  call init_qtrans( atp, bgp )
 
 ! N.B. I'm not allocating space
 ! instead initialize nbasis here
@@ -620,7 +624,7 @@
     write(stdout,*) '  natomwfc = ', natomwfc
     write(stdout,*) ' natomproj = ', natomproj
 
-    call allocate_bec_type( natomproj, nbnd_l, proj )
+    call allocate_bec_type( natomproj, ceiling(dble(nbnd)/dble(nproc)), proj )
     allocate( becp_l(natomproj,nbnd_l) )
     call resize_vnl( nkr, natomproj, nbnd_l )
 
@@ -639,7 +643,6 @@
       call orthoatwfc_shirley( npw, igk_k(1,1), xk_cart(1:3,ik) )
 
       ! reduce swfcatom to only those elements necessary for LDA+U (i.e., with U neq 0)
-      ! should this be inside an ik loop? oh maybe yes because swfcatom is updated for each k
       ikb=0
       do na=1,nat
         nt=ityp(na)
@@ -659,9 +662,9 @@
         call mp_bcast( nbnd_ip, (ip-1), intra_pool_comm )
 
         CALL ZGEMM( 'C', 'N', ikb, nbnd_ip, npw, (1.0_DP,0.0_DP), &
-           swfcatom_ldaU, npwx, evc(1,band_subset(1)+ibnd), npwx, (0.0_DP,0.0_DP), proj%k, ikb )
+           swfcatom_ldaU, size(swfcatom_ldaU,1), evc(1,band_subset(1)+ibnd), size(evc,1), (0.0_DP,0.0_DP), proj%k, size(proj%k,1) )
         ! collect results at process ip-1
-        call mp_root_sum( proj%k(:,1:nbnd_ip), becp_l, ip-1, world_comm )
+        call mp_root_sum( proj%k(1:ikb,1:nbnd_ip), becp_l, ip-1, world_comm )
         ibnd=ibnd+nbnd_ip
       enddo
 

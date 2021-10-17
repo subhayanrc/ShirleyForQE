@@ -49,6 +49,7 @@ default :
 	@echo '  SternheimerGW calculate GW using Sternheimer equations'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
+	@echo '  shirley      k-space interpolation with optimal basis functions'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
@@ -159,6 +160,10 @@ examples :
 pwall : pw neb ph pp pwcond acfdt
 
 all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
+
+shirley : pw
+	if test -d SHIRLEY ; then \
+	( cd SHIRLEY ; $(MAKE) shirley || exit 1) ; fi
 
 ###########################################################
 # Auxiliary targets used by main targets:
