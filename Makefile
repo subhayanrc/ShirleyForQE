@@ -50,6 +50,7 @@ default :
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo '  shirley      k-space interpolation with optimal basis functions'
+	@echo '  corerepair   atomic matrix elements for PAW approaches'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
@@ -161,9 +162,13 @@ pwall : pw neb ph pp pwcond acfdt
 
 all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
 
-shirley : pw
+shirley : pw corerepair
 	if test -d SHIRLEY ; then \
 	( cd SHIRLEY ; $(MAKE) shirley || exit 1) ; fi
+
+corerepair : upf
+	if test -d corerepair ; then \
+	( cd corerepair ; $(MAKE) || exit 1) ; fi
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -318,6 +323,7 @@ clean :
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW \
+                SHIRLEY \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
