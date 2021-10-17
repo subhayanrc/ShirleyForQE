@@ -211,6 +211,8 @@ program addlocalproj_upf
   !
   real(8),external :: intradialprod
   !
+  logical, external :: matches
+  !
 #if defined(__MPI)
    CALL mp_startup()
 #endif
@@ -231,8 +233,10 @@ program addlocalproj_upf
 
   !---------------------------------------------------------------------- 
   ! do something to pseudo
-  if( upf%typ /= 'NC' ) then
-    write(*,*) ' error: this code is not yet ready to handle non-normconserving pseudopotentials'
+  ! for some reason there is not a logical to note that we are norm-conserving
+  if( .not. (matches ('NC', upf%typ) ) ) then
+    write(*,*) 'pseudo type = ', upf%typ
+    write(*,*) ' error: this code expects a norm-conserving pseudo'
     goto 20
   endif
 
