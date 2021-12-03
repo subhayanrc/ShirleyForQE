@@ -198,6 +198,7 @@ program addlocalproj_upf
   !! derived type where is possible to store data on the radial mesh
   TYPE(radial_grid_type),TARGET :: grid
   integer :: nb, lloc, ichi_loc, i, ikk_loc
+  integer,allocatable :: map(:)
   real(8) :: rcut_loc, epsloc, dion_loc
   !
   ! pp_beta
@@ -221,7 +222,7 @@ program addlocalproj_upf
 
   !---------------------------------------------------------------------- 
   ! read
-  print '(''  Input PP file in UPF format > '',$)'
+  print '(''  Input PP file in UPF format : '',$)'
   read (*, '(a)', end = 20, err = 20) filein
   open(unit=iunps,file=filein,status='old',form='formatted',iostat=ios)
   if (ios.ne.0) stop
@@ -248,30 +249,49 @@ program addlocalproj_upf
   do nb=1,upf%nwfc
     write(*,*) '  chi ', nb, ' l=', upf%lchi(nb)
   enddo
-  print '(''  Angular momentum of local channel > '',$)'
-  read (*,*,end=20,err=20) lloc
+  write(*,*) ' number of projectors and wave functions differ by ', upf%nwfc-upf%nbeta
+  if( upf%nwfc-upf%nbeta /= 1 ) then
+    write(*,*) ' error: this code expects only one missing projector'
+    goto 20
+  endif
+  !print '(''  Angular momentum of local channel : '',$)'
+  !read (*,*,end=20,err=20) lloc
+  allocate( map(upf%nwfc) )
+  map = -1
+  do i=1,upf%nwfc
+    do nb=1,upf%nbeta
+      if( upf%lll(nb) == upf%lchi(i) ) then
+        write(*,*) ' beta ', nb, ' matches chi ', i
+        map(i)=nb
+      endif
+    enddo
+  enddo
+  forall( i=1:upf%nwfc, map(i)==-1 ) ichi_loc=i
+  lloc=upf%lchi(ichi_loc)
+  write(*,*) ' Angular momentum of local channel chosen to be ', lloc
 
   ! check on existing wave functions
-  if( upf%nwfc == 0 ) then
-    write(*,*) ' There are no atomic wave functions for generating this projector'
-    if( lloc > 0 ) then
-      write(*,*) ' hydrogenic wave implemented only for s-waves'
-      goto 20
-    endif
-    write(*,*) ' Using a hydrogenic wave instead'
-    ichi_loc=0
-  else
-    do nb=1,upf%nwfc
-      if( lloc==upf%lchi(nb) ) write(*,*) ' chi ', nb, ' has the correct ang mom'
-    enddo
-    print '(''  Pick which chi to use in constructing the local projector > '',$)'
-    read(*,*,end=20,err=20) ichi_loc
-    if( ichi_loc < 1 .or. ichi_loc > upf%nwfc ) then
-      write(*,*) ' error: chosen chi is out of bounds' ; goto 20
-    else if( upf%lchi(ichi_loc)/=lloc ) then
-      write(*,*) ' error: chosen chi has the wrong ang momentum'; goto 20
-    endif
-  endif
+  ! this might be impossible
+  !if( upf%nwfc == 0 ) then
+  !  write(*,*) ' There are no atomic wave functions for generating this projector'
+  !  if( lloc > 0 ) then
+  !    write(*,*) ' hydrogenic wave implemented only for s-waves'
+  !    goto 20
+  !  endif
+  !  write(*,*) ' Using a hydrogenic wave instead'
+  !  ichi_loc=0
+  !else
+  !  do nb=1,upf%nwfc
+  !    if( lloc==upf%lchi(nb) ) write(*,*) ' chi ', nb, ' has the correct ang mom'
+  !  enddo
+  !  print '(''  Pick which chi to use in constructing the local projector > '',$)'
+  !  read(*,*,end=20,err=20) ichi_loc
+  !  if( ichi_loc < 1 .or. ichi_loc > upf%nwfc ) then
+  !    write(*,*) ' error: chosen chi is out of bounds' ; goto 20
+  !  else if( upf%lchi(ichi_loc)/=lloc ) then
+  !    write(*,*) ' error: chosen chi has the wrong ang momentum'; goto 20
+  !  endif
+  !endif
 
   ! cut-off
   ! recompute upf%kbeta
@@ -297,32 +317,37 @@ program addlocalproj_upf
   write(*,*) ' chosen cut-off radius = ', rcut_loc
 
   ! copy old projectors and resize
-  ! pp_beta
   if( upf%nbeta > 0 ) then
-  allocate( betar_old(size(upf%beta,1),size(upf%beta,2)), &
-            lll_old(size(upf%lll,1)), &
-            ikk2_old(size(upf%kbeta,1)) )
-  betar_old = upf%beta
-  lll_old = upf%lll
-  ikk2_old = upf%kbeta
-  deallocate( upf%beta ) ; allocate( upf%beta(size(betar_old,1),size(betar_old,2)+1) )
-  deallocate( upf%lll ) ; allocate( upf%lll(size(lll_old,1)+1) )
-  deallocate( upf%kbeta ) ; allocate( upf%kbeta(size(ikk2_old,1)+1) )
-  upf%beta(:,1:size(upf%beta,2)-1) = betar_old
-  upf%lll(1:size(upf%lll)-1) = lll_old
-  upf%kbeta(1:size(upf%kbeta)-1) = ikk2_old
-  ! pp_dij
-  allocate( dion_old(size(upf%dion,1),size(upf%dion,2)) )
-  dion_old = upf%dion
-  deallocate( upf%dion ) ; allocate( upf%dion(size(dion_old,1)+1,size(dion_old,2)+1) )
-  upf%dion=0.d0
-  upf%dion(1:size(upf%dion,1)-1,1:size(upf%dion,2)-1) = dion_old
+    ! pp_beta
+    allocate( betar_old(size(upf%beta,1),size(upf%beta,2)), &
+              lll_old(size(upf%lll,1)), &
+              ikk2_old(size(upf%kbeta,1)) )
+    betar_old = upf%beta
+    lll_old = upf%lll
+    ikk2_old = upf%kbeta
+    deallocate( upf%beta ) ; allocate( upf%beta(size(betar_old,1),size(betar_old,2)+1) )
+    deallocate( upf%lll ) ; allocate( upf%lll(size(lll_old,1)+1) )
+    deallocate( upf%kbeta ) ; allocate( upf%kbeta(size(ikk2_old,1)+1) )
+
+    ! pp_dij
+    allocate( dion_old(size(upf%dion,1),size(upf%dion,2)) )
+    dion_old = upf%dion
+    deallocate( upf%dion ) ; allocate( upf%dion(size(dion_old,1)+1,size(dion_old,2)+1) )
+  else
+    ! if no projectors then make space for one
+    allocate(upf%beta(size(betar_loc),1))
+    allocate(upf%lll(1))
+    allocate(upf%kbeta(1))
+    allocate(upf%dion(1,1))
   endif
 
   ! generate chi_loc and betar_loc
   allocate( chi_loc(size(upf%r)), betar_loc(size(upf%r)) )
   if( ichi_loc<1 ) then
-  ! compute chi_loc
+    ! this assumes that if we have no projector at all, which seems likely for the H atom only
+    ! maybe this should be rewritten for a general Z value, not assuming Z=1
+
+    ! compute chi_loc
     epsloc = (-log(eps12))
     ! compute ikk_loc
     i=size(upf%r)
@@ -338,7 +363,7 @@ program addlocalproj_upf
     ! why the factor of 2 here - surely it's irrelevant
     chi_loc = 2.d0 * upf%r * chi_loc  ! dont forget that we store r*chi_loc
 
-  ! compute betar_loc
+    ! compute betar_loc
     epsloc = ((-log(eps12))**(1.d0/lambda))*rcut_loc
     ! compute ikk_loc
     i=size(upf%r)
@@ -351,7 +376,10 @@ program addlocalproj_upf
       ! hydrogenic s-wave
       betar_loc(i) = exp( -(upf%r(i)/rcut_loc)**lambda )*chi_loc(i)
     enddo
+
   else
+    ! now, assuming that there was a chi_loc that matches the lloc value
+
     ! modify rcut_loc to give beta_loc=0 outside the cut-off radius
     rcut_loc = rcut_loc / ((-log(eps12) )**(1.d0/lambda))
     chi_loc = upf%chi(:,ichi_loc)
@@ -365,21 +393,25 @@ program addlocalproj_upf
   ! upf%dion = 1 / integral beta * chi
   dion_loc = 1.d0 / intradialprod( ikk_loc, upf%r, betar_loc, chi_loc )
 
-  if(upf%nbeta == 0 ) then
-    allocate(upf%beta(size(betar_loc),1))
-    allocate(upf%lll(1))
-    allocate(upf%kbeta(1))
-    allocate(upf%dion(1,1))
-  endif
-
   ! update pseudo-variables
+  ! to match the ordering of the chi wave functions
   upf%nbeta = upf%nbeta+1
-  upf%beta(:,size(upf%beta,2)) = betar_loc
-  upf%lll(size(upf%lll)) = lloc
-  upf%kbeta(size(upf%kbeta)) = ikk_loc
-  upf%kkbeta = maxval(upf%kbeta(:))
-  upf%dion(size(upf%dion,1),size(upf%dion,2)) = dion_loc
-  
+  upf%dion=0.d0
+  do nb=1,upf%nbeta
+    if( map(nb) /= -1) then
+      upf%beta(:,nb) = betar_old(:,map(nb))
+      upf%lll(nb) = lll_old(map(nb))
+      upf%kbeta(nb) = ikk2_old(map(nb))
+      ! assumption for NCPP's that dion is diagonal
+      upf%dion(nb,nb) = dion_old(map(nb),map(nb))
+    else
+      upf%beta(:,nb) = betar_loc
+      upf%lll(nb) = lloc
+      upf%kbeta(nb) = ikk_loc
+      upf%dion(nb,nb) = dion_loc
+    endif
+  enddo
+    
   write(*,*) ' new local projector has been made'
 
   !---------------------------------------------------------------------- 
