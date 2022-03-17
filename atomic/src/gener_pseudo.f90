@@ -256,6 +256,7 @@ subroutine gener_pseudo
         if (tm) then
            call compute_phi_tm(lam,ik(ns),psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
         else
+           write(*,*) ns, lam, ik(ns), occ, enls(ns), els(ns) 
            call compute_phi(lam,ik(ns),psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
            ecutrho=max(ecutrho,8.0_dp*xc(6)**2)
         endif

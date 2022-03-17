@@ -247,7 +247,9 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !      check for absence of nodes in the pseudo wavefunction
   !
   nnode=0  
+  write(123,*) '# ', lam
   do n=1,ik+1
+     write(123,*) grid%r(n), phi_out(n), chir(n)
      if ( phi_out(n) .ne. sign(phi_out(n),phi_out(n+1)) ) then
         if (iflag==1) write(stdout,150) lam,grid%r(n)
 150     format (5x,'l=',i4,' Node at ',f10.8)

@@ -20,6 +20,7 @@
    pseudotype=3,
    lloc=2,
    file_pseudopw='OPBE.RRKJ3',
+   file_beta='beta'
  /
 5
 2S  1  0  2.00  0.00  1.40  1.70

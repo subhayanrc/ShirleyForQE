@@ -108,6 +108,15 @@ shirley_overlap_input.o \
 start_shirley.o \
 stop_shirley.o 
 #
+FOCKRANKRED = \
+append_missing_slash.o \
+print_clock_shirley.o \
+fockrankred.o \
+fockrankred_input.o \
+rgrid.o \
+start_shirley.o \
+stop_shirley.o 
+#
 #DIAGOBJ= \
 #bspline90_22.o \
 #freeunit.o \
@@ -208,6 +217,7 @@ XAS_PARA_EXE=xas_para$(DEBUG).x
 EFERMI_EXE=efermi$(DEBUG).x
 SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 OVERLAP_BINDING_EXE=overlap_binding$(DEBUG).x
+FOCKRANKRED_EXE=fockrankred$(DEBUG).x
 
 #SHIRLEY_OVERLAP_EXE=shirley_overlap$(DEBUG).x
 ##SHIRLEY_QDIAG_EXE=shirley_qdiag$(DEBUG).x
@@ -259,6 +269,7 @@ $(SHIRLEY_XAS_EXE) \
 $(XAS_PARA_EXE) \
 $(SHIRLEY_OVERLAP_EXE) \
 $(OVERLAP_BINDING_EXE) \
+$(FOCKRANKRED_EXE) \
 #$(XARS_PARA_EXE) \
 #$(SHIRLEY_EIG_EXE) \
 #$(SHIRLEY_PROJ_EXE) \
@@ -546,6 +557,11 @@ $(SHIRLEY_OVERLAP_EXE) : $(SHIRLEY_OVERLAP) $(QEMODS) $(LIBOBJS)
 $(OVERLAP_BINDING_EXE) : $(OVERLAP_BINDING) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	       $(OVERLAP_BINDING) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
+
+$(FOCKRANKRED_EXE) : $(FOCKRANKRED) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	       $(FOCKRANKRED) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; $(COPY) ../SHIRLEY/src/$@ . )
 
 tldeps:

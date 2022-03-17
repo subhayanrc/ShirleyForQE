@@ -79,7 +79,7 @@ do ns=1,nwfts
       !
       ik=0
       ikus=0
-!      write(6,*) ns, lam, rcutts(ns), rcutusts(ns)
+      write(6,*) ns, lam, rcutts(ns), rcutusts(ns), nwf0
       do n=1,grid%mesh
          if (grid%r(n).lt.rcutts(ns)) ik=n
          if (grid%r(n).lt.rcutusts(ns)) ikus=n
@@ -98,6 +98,7 @@ do ns=1,nwfts
             call compute_phi_tm(lam,ik,psi(1,1,nwf0),phits(1,ns),0,xc,   &
                                                      enlts(ns),elts(ns))
          else
+            write(*,*) ns, lam, ik, octs(ns), enlts(ns), '  '
             call compute_phi(lam,ik,psi(1,1,nwf0),phits(1,ns),xc,0,octs(ns), &
                                  enlts(ns),'  ')
          endif

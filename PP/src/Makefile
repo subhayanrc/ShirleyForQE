@@ -12,6 +12,7 @@ addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
+atomic_wfc_dipole.o \
 atomic_wfc_nc_proj.o \
 cft.o \
 chdens_module.o \
@@ -28,6 +29,7 @@ d_matrix_so.o \
 elf.o \
 fermisurfer_common.o \
 ggen1d.o \
+init_at_dipole.o \
 local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
@@ -64,7 +66,8 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x \
+      lprojwfc.x
 
 
 libpp.a : $(PPOBJS) 
@@ -139,6 +142,11 @@ pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
 projwfc.x : projwfc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		projwfc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+lprojwfc.x : lprojwfc.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		lprojwfc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
